@@ -23,3 +23,6 @@ body { background: #000; color: var(--color-cream); }
   .no-print { display: none !important; }
   body { background: white; color: black; }
 }
+
+select { background-color: #1a1a1a; color: var(--color-cream); }
+select option, select optgroup { background-color: #1a1a1a; color: #fff1dc; }
