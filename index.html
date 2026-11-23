@@ -1,18 +1,389 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/ortoclin-mark.png" />
-    <link rel="apple-touch-icon" href="/ortoclin-mark.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#FBF7EE" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Quicksand:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <title>OrtoClin · Painel</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OrtoClin | Ortodontia e Estética do Sorriso em Macapá</title>
+<meta name="description" content="OrtoClin, odontologia especializada em Macapá: ortodontia, manutenção de aparelho, clareamento e clínico geral. Agende sua avaliação pelo WhatsApp.">
+<meta property="og:title" content="OrtoClin | Odontologia Especializada em Macapá">
+<meta property="og:description" content="Ortodontia e estética do sorriso. Agende sua avaliação pelo WhatsApp.">
+<meta property="og:image" content="logo.png">
+<meta name="theme-color" content="#B8913F">
+<link rel="icon" href="logo-mark.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Quicksand:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#B8913F; --gold-2:#D4B26A; --gold-soft:#F3E7C9; --cream:#FBF7EE; --ink:#2B2620; --muted:#6F665A; --line:#E9DFC9; --white:#fff;
+  --wa:#1FA855;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);background:var(--white);line-height:1.6;-webkit-font-smoothing:antialiased}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1140px;margin:0 auto;padding:0 24px}
+.serif{font-family:'Cormorant Garamond',Georgia,serif}
+.gold-text{background:linear-gradient(135deg,#9C7A2E,#D4B26A 45%,#A9852F);-webkit-background-clip:text;background-clip:text;color:transparent}
+.eyebrow{font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:600}
+h1,h2,h3{font-family:'Cormorant Garamond',Georgia,serif;font-weight:600;line-height:1.1;color:var(--ink)}
+h2{font-size:clamp(34px,4.4vw,50px);margin:10px 0 16px}
+.lead{font-size:18px;color:var(--muted);max-width:620px}
+.btn{display:inline-flex;align-items:center;gap:10px;font-weight:600;font-size:16px;padding:16px 28px;border-radius:999px;transition:transform .15s ease, box-shadow .15s ease, background .15s}
+.btn:hover{transform:translateY(-2px)}
+.btn-wa{background:var(--wa);color:#fff;box-shadow:0 10px 24px rgba(31,168,85,.28)}
+.btn-wa:hover{box-shadow:0 14px 30px rgba(31,168,85,.36)}
+.btn-ghost{border:1.5px solid var(--gold);color:var(--gold)}
+.btn-ghost:hover{background:var(--gold-soft)}
+.btn svg{width:20px;height:20px;flex:none}
+
+/* header */
+header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.nav{display:flex;align-items:center;justify-content:space-between;height:76px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand img{height:44px;width:auto}
+.brand .bar{width:1px;height:38px;background:var(--gold-2)}
+.brand .name{font-family:'Quicksand',sans-serif;font-weight:500;font-size:28px;line-height:1;letter-spacing:-.5px}
+.brand small{display:block;font-family:'Quicksand',sans-serif;font-size:11px;color:var(--gold);letter-spacing:.06em;margin-top:3px}
+.menu{display:flex;gap:30px;font-size:15px;color:var(--muted)}
+.menu a:hover{color:var(--gold)}
+.nav .btn{padding:12px 20px;font-size:15px}
+@media(max-width:860px){.menu{display:none}.nav .btn span{display:none}.nav .btn{padding:12px}}
+
+/* hero */
+.hero{position:relative;overflow:hidden;background:radial-gradient(1000px 500px at 85% 10%,#F6EBD0 0,rgba(246,235,208,0) 60%),var(--cream)}
+.hero .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center;padding-top:80px;padding-bottom:90px}
+.hero h1{font-size:clamp(44px,6vw,76px);margin:16px 0 20px}
+.hero h1 em{font-style:italic;font-weight:500}
+.hero .lead{margin-bottom:34px}
+.cta-row{display:flex;flex-wrap:wrap;gap:14px}
+.facts{display:flex;flex-wrap:wrap;gap:22px;margin-top:38px;color:var(--muted);font-size:14.5px}
+.facts div{display:flex;align-items:center;gap:8px}
+.facts svg{width:18px;height:18px;color:var(--gold)}
+.hero-art{position:relative;aspect-ratio:1/1;max-width:460px;justify-self:center;width:100%}
+.ring{position:absolute;inset:0;border-radius:50%;border:14px solid var(--gold);box-shadow:0 30px 60px rgba(184,145,63,.25)}
+.photo{position:absolute;inset:24px;border-radius:50%;overflow:hidden;background:linear-gradient(160deg,#fff,#F3E7C9);display:flex;align-items:center;justify-content:center;text-align:center;color:var(--muted);font-size:14px}
+.photo img{width:100%;height:100%;object-fit:cover}
+.badge{position:absolute;bottom:6%;left:-4%;background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px 18px;box-shadow:0 14px 30px rgba(43,38,32,.10);display:flex;gap:12px;align-items:center}
+.badge img{height:34px}
+.badge b{display:block;font-size:15px}
+.badge span{font-size:13px;color:var(--muted)}
+.dots{position:absolute;top:28px;left:24px;width:150px;height:80px;background-image:radial-gradient(var(--gold-2) 2.2px,transparent 2.4px);background-size:20px 20px;opacity:.6}
+@media(max-width:860px){.hero .wrap{grid-template-columns:1fr;padding-top:48px;padding-bottom:64px}.hero-art{max-width:320px;order:-1}.badge{left:0}}
+
+section{padding:96px 0}
+.head{text-align:center;max-width:680px;margin:0 auto 54px}
+.head .lead{margin:0 auto}
+
+/* services */
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.card{border:1px solid var(--line);border-radius:22px;padding:30px 28px;background:#fff;display:flex;flex-direction:column;transition:box-shadow .2s, transform .2s, border-color .2s}
+.card:hover{transform:translateY(-4px);box-shadow:0 20px 40px rgba(43,38,32,.08);border-color:var(--gold-2)}
+.icon{width:54px;height:54px;border-radius:16px;background:var(--gold-soft);display:flex;align-items:center;justify-content:center;margin-bottom:20px}
+.icon svg{width:28px;height:28px;color:var(--gold)}
+.card h3{font-size:27px;margin-bottom:8px}
+.card p{color:var(--muted);font-size:15.5px;flex:1}
+.card a{margin-top:20px;color:var(--gold);font-weight:600;font-size:15px;display:inline-flex;gap:6px;align-items:center}
+.card a:hover{gap:10px}
+@media(max-width:960px){.grid{grid-template-columns:1fr 1fr}}
+@media(max-width:620px){.grid{grid-template-columns:1fr}}
+
+/* steps */
+.steps-sec{background:var(--cream)}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;counter-reset:s}
+.step{background:#fff;border-radius:22px;padding:34px 28px;border:1px solid var(--line);position:relative}
+.step:before{counter-increment:s;content:"0" counter(s);font-family:'Cormorant Garamond',serif;font-size:56px;font-weight:600;line-height:1;display:block;margin-bottom:14px;background:linear-gradient(135deg,#9C7A2E,#D4B26A);-webkit-background-clip:text;background-clip:text;color:transparent}
+.step h3{font-size:26px;margin-bottom:8px}
+.step p{color:var(--muted);font-size:15.5px}
+@media(max-width:860px){.steps{grid-template-columns:1fr}}
+
+/* maintenance */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+.list{list-style:none;margin-top:26px;display:grid;gap:14px}
+.list li{display:flex;gap:14px;align-items:flex-start;font-size:16.5px}
+.list li i{flex:none;width:28px;height:28px;border-radius:50%;background:var(--gold-soft);color:var(--gold);display:flex;align-items:center;justify-content:center;font-style:normal;font-weight:700;font-size:14px;margin-top:1px}
+.quote{border-radius:26px;background:linear-gradient(150deg,#2B2620,#3d352b);color:#F6EBD0;padding:46px 42px;position:relative;overflow:hidden}
+.quote:after{content:"";position:absolute;right:-60px;bottom:-60px;width:220px;height:220px;border-radius:50%;border:14px solid rgba(212,178,106,.35)}
+.quote p.serif{font-size:32px;line-height:1.25;color:#fff;margin-bottom:22px}
+.quote span{color:var(--gold-2);font-size:15px}
+@media(max-width:860px){.split{grid-template-columns:1fr;gap:36px}}
+
+/* about */
+.about{display:grid;grid-template-columns:.8fr 1.2fr;gap:56px;align-items:center}
+.portrait{aspect-ratio:4/5;border-radius:28px;background:linear-gradient(160deg,#F6EBD0,#fff);border:1px solid var(--line);overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px;text-align:center;padding:20px}
+.portrait img{width:100%;height:100%;object-fit:cover}
+.sign{margin-top:22px;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:30px;color:var(--gold)}
+@media(max-width:860px){.about{grid-template-columns:1fr}.portrait{max-width:360px}}
+
+/* location */
+.loc-sec{background:var(--cream)}
+.loc{display:grid;grid-template-columns:1fr 1.2fr;gap:28px;align-items:stretch}
+.info{background:#fff;border-radius:24px;border:1px solid var(--line);padding:36px}
+.info h3{font-size:30px;margin-bottom:22px}
+.row{display:flex;gap:14px;margin-bottom:22px}
+.row svg{flex:none;width:22px;height:22px;color:var(--gold);margin-top:3px}
+.row b{display:block;font-size:15px}
+.row span{color:var(--muted);font-size:15px}
+.hours{width:100%;font-size:15px;color:var(--muted);border-collapse:collapse}
+.hours td{padding:3px 0}
+.hours td:last-child{text-align:right;color:var(--ink);font-weight:500}
+.map{border-radius:24px;overflow:hidden;border:1px solid var(--line);min-height:420px}
+.map iframe{width:100%;height:100%;min-height:420px;border:0;display:block}
+.info .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+.info .btns .btn{padding:13px 20px;font-size:15px}
+@media(max-width:860px){.loc{grid-template-columns:1fr}}
+
+/* final cta */
+.final{text-align:center;background:linear-gradient(150deg,#2B2620,#3d352b);color:#F6EBD0;border-radius:32px;padding:72px 28px;position:relative;overflow:hidden}
+.final h2{color:#fff}
+.final .lead{color:#E8DCC0;margin:0 auto 32px}
+.final:before{content:"";position:absolute;left:-80px;top:-80px;width:260px;height:260px;border-radius:50%;border:16px solid rgba(212,178,106,.28)}
+
+footer{padding:48px 0 110px;border-top:1px solid var(--line);margin-top:96px;font-size:14px;color:var(--muted)}
+.foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:24px;align-items:center}
+.foot a:hover{color:var(--gold)}
+
+/* floating */
+.float{position:fixed;right:20px;bottom:20px;z-index:60;background:var(--wa);color:#fff;border-radius:999px;display:flex;align-items:center;gap:10px;padding:14px 20px 14px 16px;font-weight:600;box-shadow:0 14px 30px rgba(31,168,85,.38);transition:transform .15s}
+.float:hover{transform:scale(1.04)}
+.float svg{width:26px;height:26px}
+@media(max-width:620px){.float span{display:none}.float{padding:16px}}
+
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease, transform .6s ease}
+.reveal.on{opacity:1;transform:none}
+@media (prefers-reduced-motion: reduce){.reveal{opacity:1;transform:none;transition:none}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="wa" viewBox="0 0 24 24"><path fill="currentColor" d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2m.01 1.67c2.2 0 4.27.86 5.82 2.42a8.2 8.2 0 0 1 2.41 5.83c0 4.54-3.7 8.23-8.24 8.23-1.48 0-2.93-.39-4.19-1.15l-.3-.17-3.12.82.83-3.04-.2-.31a8.2 8.2 0 0 1-1.26-4.38c0-4.54 3.7-8.25 8.25-8.25M8.53 7.33c-.16 0-.43.06-.66.31s-.86.85-.86 2.07.89 2.4 1 2.56c.14.17 1.76 2.67 4.25 3.73.59.27 1.05.42 1.41.53.59.19 1.13.16 1.56.1.48-.07 1.46-.6 1.67-1.18s.21-1.07.15-1.18c-.07-.1-.23-.16-.48-.27-.25-.14-1.47-.74-1.69-.82-.23-.08-.37-.12-.56.12-.16.25-.64.81-.78.97-.15.17-.29.19-.53.07-.26-.13-1.06-.39-2-1.23-.74-.66-1.23-1.47-1.38-1.72-.12-.24-.01-.39.11-.5.11-.11.27-.29.37-.44.13-.14.17-.25.25-.41.08-.17.04-.31-.02-.43s-.56-1.35-.77-1.84c-.2-.48-.4-.42-.56-.43-.14 0-.3-.01-.47-.01"/></symbol>
+  <symbol id="pin" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="tooth" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" d="M7.5 3.5c1.7 0 2.6.8 4.5.8s2.8-.8 4.5-.8c2.6 0 4 2.2 4 4.8 0 2.4-1 3.9-1.6 5.6-.7 2.1-.9 6.6-2.9 6.6-1.7 0-1.6-4.6-4-4.6s-2.3 4.6-4 4.6c-2 0-2.2-4.5-2.9-6.6C4.5 12.2 3.5 10.7 3.5 8.3c0-2.6 1.4-4.8 4-4.8z"/></symbol>
+</svg>
+
+<header>
+  <div class="wrap nav">
+    <a href="#inicio" class="brand" aria-label="OrtoClin, início">
+      <img src="logo-mark.png" alt="">
+      <span class="bar"></span>
+      <span><span class="name gold-text">OrtoClin</span><small>Odontologia Especializada</small></span>
+    </a>
+    <nav class="menu">
+      <a href="#servicos">Serviços</a>
+      <a href="#como-funciona">Como funciona</a>
+      <a href="#sobre">Sobre</a>
+      <a href="#localizacao">Como chegar</a>
+    </nav>
+    <a class="btn btn-wa js-wa" data-msg="Olá! Vim pelo site da OrtoClin e gostaria de agendar uma avaliação." href="#"><svg><use href="#wa"/></svg><span>Agendar avaliação</span></a>
+  </div>
+</header>
+
+<main id="inicio">
+  <section class="hero" style="padding:0">
+    <div class="wrap">
+      <div>
+        <span class="eyebrow">Ortodontia &amp; estética do sorriso · Macapá</span>
+        <h1>Transformando sorrisos com <em class="gold-text">técnica e confiança</em></h1>
+        <p class="lead">Do primeiro diagnóstico à manutenção do aparelho, você é acompanhado de perto por uma equipe especializada, num ambiente pensado para o seu conforto.</p>
+        <div class="cta-row">
+          <a class="btn btn-wa js-wa" data-msg="Olá! Vim pelo site da OrtoClin e gostaria de agendar uma avaliação." href="#"><svg><use href="#wa"/></svg>Agendar pelo WhatsApp</a>
+          <a class="btn btn-ghost" href="#servicos">Conhecer os tratamentos</a>
+        </div>
+        <div class="facts">
+          <div><svg><use href="#pin"/></svg>Av. Pres. Vargas, 42 · Santa Rita</div>
+          <div><svg><use href="#clock"/></svg>Seg. a sáb. · horário no fim da página</div>
+        </div>
+      </div>
+      <div class="hero-art reveal">
+        <div class="dots"></div>
+        <div class="ring"></div>
+        <div class="photo">
+          <!-- TROCAR: coloque uma foto real da clínica ou de um sorriso (ex.: foto-hero.jpg) -->
+          <img src="foto-hero.jpg" alt="Atendimento na OrtoClin" onerror="this.remove()">
+          <span style="padding:40px">Foto da clínica<br>(foto-hero.jpg)</span>
+        </div>
+        <div class="badge">
+          <img src="logo-mark.png" alt="">
+          <div><b>Avaliação completa</b><span>o primeiro passo de todo tratamento</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="servicos">
+    <div class="wrap">
+      <div class="head reveal">
+        <span class="eyebrow">Tratamentos</span>
+        <h2>Cuidado completo para o seu sorriso</h2>
+        <p class="lead">Escolha o tratamento e fale direto com a nossa equipe pelo WhatsApp.</p>
+      </div>
+      <div class="grid">
+        <article class="card reveal">
+          <div class="icon"><svg><use href="#tooth"/></svg></div>
+          <h3>Avaliação odontológica</h3>
+          <p>O passo essencial de todo tratamento. Analisamos o seu quadro com calma e explicamos cada opção antes de começar.</p>
+          <a class="js-wa" data-msg="Olá! Vim pelo site e gostaria de agendar uma avaliação." href="#">Agendar avaliação →</a>
+        </article>
+        <article class="card reveal">
+          <div class="icon"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" d="M3 12h18M6 9v6M10 9v6M14 9v6M18 9v6"/><rect x="4" y="9" width="4" height="6" rx="1" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".0"/></svg></div>
+          <h3>Ortodontia</h3>
+          <p>Aparelhos ortodônticos para alinhar os dentes e corrigir a mordida, com planejamento individual para cada idade.</p>
+          <a class="js-wa" data-msg="Olá! Vim pelo site e tenho interesse em aparelho ortodôntico." href="#">Quero saber mais →</a>
+        </article>
+        <article class="card reveal">
+          <div class="icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+          <h3>Manutenção do aparelho</h3>
+          <p>Consultas periódicas para ajustar, limpar e acompanhar a evolução, para o tratamento terminar no prazo planejado.</p>
+          <a class="js-wa" data-msg="Olá! Vim pelo site e gostaria de agendar a manutenção do meu aparelho." href="#">Agendar manutenção →</a>
+        </article>
+        <article class="card reveal">
+          <div class="icon"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></div>
+          <h3>Clareamento dental</h3>
+          <p>Caseiro, com placas sob medida e acompanhamento, ou no consultório, feito pela dentista com segurança.</p>
+          <a class="js-wa" data-msg="Olá! Vim pelo site e tenho interesse em clareamento dental." href="#">Quero clarear →</a>
+        </article>
+        <article class="card reveal">
+          <div class="icon"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M9 3h6l-1 5h4l-7 13 1-8H8l1-10z"/></svg></div>
+          <h3>Clínico geral</h3>
+          <p>Limpeza, restaurações e prevenção para manter a saúde da boca em dia, com retornos no tempo certo.</p>
+          <a class="js-wa" data-msg="Olá! Vim pelo site e gostaria de agendar uma consulta de clínico geral." href="#">Agendar consulta →</a>
+        </article>
+        <article class="card reveal">
+          <div class="icon"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" d="M4 10c2.5 4 5.2 6 8 6s5.5-2 8-6"/><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" d="M7 12.5l.5 2M12 13.5v2.2M17 12.5l-.5 2"/></svg></div>
+          <h3>Estética do sorriso</h3>
+          <p>Tratamentos para deixar o sorriso mais harmônico e natural, planejados junto com você.</p>
+          <a class="js-wa" data-msg="Olá! Vim pelo site e tenho interesse em estética do sorriso." href="#">Quero saber mais →</a>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="como-funciona" class="steps-sec">
+    <div class="wrap">
+      <div class="head reveal">
+        <span class="eyebrow">Como funciona</span>
+        <h2>Simples do começo ao fim</h2>
+      </div>
+      <div class="steps">
+        <div class="step reveal"><h3>Você chama no WhatsApp</h3><p>Conta o que precisa e escolhe o melhor horário. Respondemos rapidinho.</p></div>
+        <div class="step reveal"><h3>Avaliação e plano</h3><p>Examinamos com calma, explicamos as opções e montamos o seu plano de tratamento, sem surpresas.</p></div>
+        <div class="step reveal"><h3>Tratamento acompanhado</h3><p>Cada consulta e retorno já sai agendado, e a gente avisa antes, para você não perder nada.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap split">
+      <div class="reveal">
+        <span class="eyebrow">Usa aparelho?</span>
+        <h2>Por que a manutenção não pode atrasar</h2>
+        <p class="lead">Seguir as consultas de manutenção é o que garante que o tratamento termine no prazo e com o resultado planejado.</p>
+        <ul class="list">
+          <li><i>1</i>Melhor adaptação ao aparelho</li>
+          <li><i>2</i>Limpeza e higienização em dia</li>
+          <li><i>3</i>Identificação precoce de possíveis problemas</li>
+          <li><i>4</i>Correção de danos causados por alguns alimentos</li>
+          <li><i>5</i>Sem atrasos no planejamento e no resultado</li>
+        </ul>
+        <div style="margin-top:30px"><a class="btn btn-wa js-wa" data-msg="Olá! Vim pelo site e gostaria de agendar a manutenção do meu aparelho." href="#"><svg><use href="#wa"/></svg>Agendar minha manutenção</a></div>
+      </div>
+      <div class="quote reveal">
+        <p class="serif">"Um sorriso alinhado é construído consulta a consulta. A gente acompanha cada etapa com você."</p>
+        <span>Equipe OrtoClin</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="sobre" style="padding-top:0">
+    <div class="wrap about">
+      <div class="portrait reveal">
+        <!-- TROCAR: foto da Dra. Elizabeth (ex.: dra-elizabeth.jpg) -->
+        <img src="dra-elizabeth.jpg" alt="Dra. Elizabeth Cabral" onerror="this.remove()">
+        <span>Foto da Dra. Elizabeth<br>(dra-elizabeth.jpg)</span>
+      </div>
+      <div class="reveal">
+        <span class="eyebrow">Sobre a clínica</span>
+        <h2>Odontologia especializada, atendimento próximo</h2>
+        <p class="lead" style="margin-bottom:16px">A OrtoClin nasceu para cuidar de sorrisos com técnica, transparência e acolhimento. Aqui você entende cada etapa do tratamento e é acompanhado do início ao fim.</p>
+        <p class="lead">À frente da clínica está a Dra. Elizabeth Cabral, cirurgiã-dentista com atuação em clínica geral e ortodontia.</p>
+        <div class="sign">Dra. Elizabeth Cabral</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="localizacao" class="loc-sec">
+    <div class="wrap">
+      <div class="head reveal">
+        <span class="eyebrow">Localização</span>
+        <h2>Venha nos visitar</h2>
+      </div>
+      <div class="loc">
+        <div class="info reveal">
+          <h3>OrtoClin Macapá</h3>
+          <div class="row"><svg><use href="#pin"/></svg><div><b>Endereço</b><span>Av. Pres. Vargas, 42 · Santa Rita<br>Macapá · AP · 68900-070</span></div></div>
+          <div class="row"><svg><use href="#clock"/></svg><div style="flex:1"><b>Horário de atendimento</b>
+            <table class="hours">
+              <tr><td>Segunda a sexta</td><td>8h às 12h · 14h às 19h</td></tr>
+              <tr><td>Sábado</td><td>8h às 12h · 13h às 16h</td></tr>
+              <tr><td>Domingo</td><td>Fechado</td></tr>
+            </table></div></div>
+          <div class="row"><svg><use href="#wa"/></svg><div><b>WhatsApp</b><span class="js-phone"></span></div></div>
+          <div class="btns">
+            <a class="btn btn-wa js-wa" data-msg="Olá! Vim pelo site da OrtoClin e gostaria de agendar uma avaliação." href="#"><svg><use href="#wa"/></svg>Agendar</a>
+            <a class="btn btn-ghost" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=Av.+Pres.+Vargas,+42+-+Santa+Rita,+Macap%C3%A1+-+AP,+68900-070">Como chegar</a>
+          </div>
+        </div>
+        <div class="map reveal">
+          <iframe title="Mapa da OrtoClin" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+            src="https://www.google.com/maps?q=Av.+Pres.+Vargas,+42+-+Santa+Rita,+Macap%C3%A1+-+AP,+68900-070&output=embed"></iframe>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding-bottom:0">
+    <div class="wrap">
+      <div class="final reveal">
+        <span class="eyebrow" style="color:var(--gold-2)">Agende sua avaliação</span>
+        <h2>Seu novo sorriso começa com uma conversa</h2>
+        <p class="lead">Chame a gente no WhatsApp, conte o que você precisa e escolha o melhor horário.</p>
+        <a class="btn btn-wa js-wa" data-msg="Olá! Vim pelo site da OrtoClin e gostaria de agendar uma avaliação." href="#"><svg><use href="#wa"/></svg>Falar no WhatsApp</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a href="#inicio" class="brand">
+      <img src="logo-mark.png" alt="" style="height:34px">
+      <span><span class="name gold-text" style="font-size:22px">OrtoClin</span><small>Odontologia Especializada</small></span>
+    </a>
+    <div>
+      Responsável técnica: Dra. Elizabeth Cabral · CRO-AP <span>[número]</span><br>
+      Av. Pres. Vargas, 42 · Santa Rita · Macapá · AP
+    </div>
+    <div><a href="https://www.instagram.com/ortoclin.ap/" target="_blank" rel="noopener">Instagram @ortoclin.ap</a></div>
+  </div>
+</footer>
+
+<a class="float js-wa" data-msg="Olá! Vim pelo site da OrtoClin e gostaria de agendar uma avaliação." href="#" aria-label="Agendar pelo WhatsApp"><svg><use href="#wa"/></svg><span>Agendar</span></a>
+
+<script>
+  // Número do WhatsApp da clínica (só dígitos, com 55 + DDD)
+  var WHATSAPP = "559691729897";
+  var pretty = "(96) 99172-9897";
+  document.querySelectorAll('.js-wa').forEach(function(a){
+    var msg = a.getAttribute('data-msg') || "Olá! Vim pelo site da OrtoClin.";
+    a.href = "https://wa.me/" + WHATSAPP + "?text=" + encodeURIComponent(msg);
+    a.target = "_blank"; a.rel = "noopener";
+  });
+  document.querySelectorAll('.js-phone').forEach(function(s){ s.textContent = pretty; });
+  var io = new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('on'); io.unobserve(e.target);} }); }, {threshold:.12});
+  document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+</script>
+</body>
 </html>

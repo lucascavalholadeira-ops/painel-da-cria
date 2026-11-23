@@ -1,4 +1,7 @@
-# Painel da Cria · OrtoClin
+# OrtoClin · site + Painel da Cria
+
+- `/` é o site da clínica (`index.html`, logos em `public/`).
+- `/painel` é o painel (`painel/index.html` + `src/`).
 
 Instalação da **OrtoClin, Odontologia Especializada** (Macapá, AP). Visual claro e dourado, igual ao site da clínica.
 Em modo demonstração (padrão) usa pacientes fictícios e não mostra avisos de WhatsApp. Para usar com dados reais, defina `VITE_DEMO=false`.
