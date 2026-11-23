@@ -28,7 +28,7 @@ function Raiz() {
 function Login({ onEntrar }: { onEntrar: (p: Papel) => void }) {
   const [wpp, setWpp] = useState(false)
   return (
-    <div className="min-h-dvh bg-ink text-cream flex flex-col items-center justify-center p-6 gap-6">
+    <div className="min-h-dvh bg-black text-cream flex flex-col items-center justify-center p-6 gap-6">
       <img src="/logo-vertical.png" alt="Cria" className="w-44 -my-6" />
       <div className="text-center">
         <h1 className="text-2xl font-extrabold">Painel da Cria</h1>
@@ -50,7 +50,6 @@ function Login({ onEntrar }: { onEntrar: (p: Papel) => void }) {
         <button className="btn w-full bg-white/10 text-cream py-3" onClick={() => onEntrar('recepcao')}>Entrar como recepção</button>
       </div>
       )}
-      <img src="/mascote.webp" alt="" className="w-28 opacity-90" />
     </div>
   )
 }
@@ -73,7 +72,7 @@ function Shell({ papel, sair }: { papel: Papel; sair: () => void }) {
   return (
     <div className="min-h-dvh md:flex">
       {/* menu lateral (computador) */}
-      <aside className="no-print hidden md:flex w-56 shrink-0 bg-ink text-cream flex-col p-3 gap-1 sticky top-0 h-dvh">
+      <aside className="no-print hidden md:flex w-56 shrink-0 bg-ink text-cream border-r border-white/10 flex-col p-3 gap-1 sticky top-0 h-dvh">
         <img src="/logo.png" alt="Cria" className="h-20 object-cover object-center -mx-2 mb-2" />
         {telas.map(t => (
           <button key={t.id} onClick={() => setTela(t.id)}
@@ -91,17 +90,17 @@ function Shell({ papel, sair }: { papel: Papel; sair: () => void }) {
 
       <div className="flex-1 min-w-0 flex flex-col">
         {/* topo com valor parado */}
-        <header className="no-print sticky top-0 z-20 bg-paper/90 backdrop-blur border-b border-black/5 px-4 py-3 flex items-center gap-3">
+        <header className="no-print sticky top-0 z-20 bg-black/85 backdrop-blur border-b border-white/10 px-4 py-3 flex items-center gap-3">
           <img src="/favicon.svg" alt="" className="w-9 h-9 md:hidden" />
           <div className="min-w-0">
-            <p className="text-xs text-black/50 font-semibold">{s.clinica.nome}</p>
+            <p className="text-xs text-cream/50 font-semibold">{s.clinica.nome}</p>
             <p className="font-extrabold text-lg leading-tight">{TELAS.find(t => t.id === tela)?.nome}</p>
           </div>
           <div className="ml-auto text-right">
-            <p className="text-[11px] uppercase tracking-wide text-black/50 font-bold">Dinheiro parado</p>
-            <p className="text-2xl md:text-3xl font-extrabold text-amber-600 leading-none">{brl(valorParado(s))}</p>
+            <p className="text-[11px] uppercase tracking-wide text-cream/50 font-bold">Dinheiro parado</p>
+            <p className="text-2xl md:text-3xl font-extrabold text-amber-400 leading-none">{brl(valorParado(s))}</p>
           </div>
-          <button className="md:hidden text-xs text-black/50 underline" onClick={sair}>Sair</button>
+          <button className="md:hidden text-xs text-cream/50 underline" onClick={sair}>Sair</button>
         </header>
 
         {wpp?.configurado && wpp.estado !== 'open' && (
@@ -113,7 +112,7 @@ function Shell({ papel, sair }: { papel: Papel; sair: () => void }) {
       </div>
 
       {/* menu de baixo (celular) */}
-      <nav className="no-print md:hidden fixed bottom-0 inset-x-0 z-30 bg-ink text-cream flex overflow-x-auto">
+      <nav className="no-print md:hidden fixed bottom-0 inset-x-0 z-30 bg-ink text-cream border-t border-white/10 flex overflow-x-auto">
         {telas.map(t => (
           <button key={t.id} onClick={() => setTela(t.id)}
             className={`relative flex-1 min-w-16 py-2 flex flex-col items-center text-[10px] font-semibold ${tela === t.id ? 'text-cream' : 'text-cream/50'}`}>
@@ -127,7 +126,7 @@ function Shell({ papel, sair }: { papel: Papel; sair: () => void }) {
         <button onClick={() => toast('Na versão real, abre o WhatsApp do Lucas')}
           className="no-print fixed right-4 bottom-20 md:bottom-6 z-30 btn-dark shadow-lg rounded-full">🙋 Falar com o Lucas</button>
       )}
-      {aviso && <div className="fixed left-1/2 -translate-x-1/2 bottom-24 md:bottom-8 z-50 bg-ink text-cream rounded-xl px-4 py-2 text-sm shadow-lg">{aviso}</div>}
+      {aviso && <div className="fixed left-1/2 -translate-x-1/2 bottom-24 md:bottom-8 z-50 bg-cream text-ink font-semibold rounded-xl px-4 py-2 text-sm shadow-lg">{aviso}</div>}
     </div>
   )
 }

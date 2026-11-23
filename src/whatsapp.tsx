@@ -49,7 +49,7 @@ export function ConectarWhatsApp({ onConectado, escuro = false }: { onConectado?
   // O QR do WhatsApp expira em ~40s: renova enquanto estiver na tela.
   useEffect(() => { if (!qr || conectado) return; const t = setTimeout(() => gerar(), 35000); return () => clearTimeout(t) }, [qr, conectado]) // eslint-disable-line
 
-  const sub = escuro ? 'text-cream/60' : 'text-black/60'
+  const sub = escuro ? 'text-cream/60' : 'text-cream/60'
   if (!st) return <p className={`text-sm ${sub}`}>Verificando WhatsApp…</p>
   if (st.erro) return <p className="text-sm text-red-500 font-semibold">{st.erro}. Tente de novo em instantes.</p>
   if (!st.configurado) return <p className={`text-sm ${sub}`}>WhatsApp não configurado nesta instalação (falta EVOLUTION_API_URL e EVOLUTION_API_KEY).</p>
@@ -68,7 +68,7 @@ export function ConectarWhatsApp({ onConectado, escuro = false }: { onConectado?
     <div className="space-y-3">
       {qr ? (
         <div className="space-y-2">
-          <img src={qr} alt="QR code do WhatsApp" className="w-56 h-56 bg-white rounded-2xl p-2 mx-auto" />
+          <img src={qr} alt="QR code do WhatsApp" className="w-56 h-56 bg-card rounded-2xl p-2 mx-auto" />
           <p className={`text-xs text-center ${sub}`}>No celular da clínica: WhatsApp › Aparelhos conectados › Conectar aparelho › aponte para o código.</p>
         </div>
       ) : codigo ? (
@@ -77,7 +77,7 @@ export function ConectarWhatsApp({ onConectado, escuro = false }: { onConectado?
           <p className={`text-xs ${sub}`}>WhatsApp › Aparelhos conectados › Conectar aparelho › Conectar com número de telefone › digite este código.</p>
         </div>
       ) : null}
-      <button className={`btn w-full py-3 ${escuro ? 'bg-cream text-ink' : 'bg-ink text-cream'}`} disabled={carregando} onClick={() => gerar()}>
+      <button className={`btn w-full py-3 bg-cream text-ink`} disabled={carregando} onClick={() => gerar()}>
         {carregando ? 'Gerando…' : qr ? 'Gerar outro QR code' : 'Mostrar QR code'}
       </button>
       <details className={`text-xs ${sub}`}>
@@ -95,7 +95,7 @@ export function ConectarWhatsApp({ onConectado, escuro = false }: { onConectado?
 
 export function Desconectar({ depois }: { depois?: () => void }) {
   const [ok, setOk] = useState(false)
-  return <button className="btn-ghost text-red-600" disabled={ok} onClick={async () => {
+  return <button className="btn-ghost text-red-400" disabled={ok} onClick={async () => {
     if (!confirm('Desconectar o WhatsApp da clínica?')) return
     setOk(true); await api('sair', true); depois?.(); location.reload()
   }}>Desconectar WhatsApp</button>

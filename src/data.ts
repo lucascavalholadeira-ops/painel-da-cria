@@ -133,8 +133,8 @@ export function seed(): State {
     { id: 's6', nome: 'Avaliação', preco: 0, duracao: 30, retorno: 365 },
   ]
   const profs: Professional[] = [
-    { id: 'p1', nome: 'Dra. Elizabeth', cor: '#0b0b0b', inicio: '09:00', fim: '18:00' },
-    { id: 'p2', nome: 'Dra. Camila', cor: '#b45309', inicio: '13:00', fim: '20:00' },
+    { id: 'p1', nome: 'Dra. Elizabeth', cor: '#fff1dc', inicio: '09:00', fim: '18:00' },
+    { id: 'p2', nome: 'Dra. Camila', cor: '#f59e0b', inicio: '13:00', fim: '20:00' },
   ]
   const nomes = ['Mariana Souza', 'Juliana Lima', 'Patrícia Alves', 'Fernanda Rocha', 'Beatriz Costa', 'Aline Martins', 'Carla Mendes', 'Renata Dias', 'Larissa Pires', 'Tatiane Gomes', 'Vanessa Freitas', 'Débora Nunes', 'Gabriela Reis', 'Amanda Teixeira']
   const tagDe = ['t3', 't3', 't3', 't3', 't4', 't3', 't1', 't1', 't2', 't2', null, null, 't1', 't3']

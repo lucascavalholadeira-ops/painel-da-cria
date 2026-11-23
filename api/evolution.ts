@@ -58,6 +58,12 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
         c = qrDe(criar.j) ? criar : await evo(`/instance/connect/${encodeURIComponent(INST)}${q}`)
       }
       if (c.j?.instance?.state === 'open') return send(200, { estado: 'open' })
+      if (!qrDe(c.j) && !codigoDe(c.j)) {
+        // Instância presa (QR expirou muitas vezes): reinicia e pede de novo.
+        await evo(`/instance/restart/${encodeURIComponent(INST)}`, 'POST')
+        await new Promise(r => setTimeout(r, 2500))
+        c = await evo(`/instance/connect/${encodeURIComponent(INST)}${q}`)
+      }
       return send(200, { estado: 'connecting', qr: qrDe(c.j), codigo: codigoDe(c.j) })
     }
 

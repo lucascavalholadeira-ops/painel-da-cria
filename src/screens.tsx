@@ -27,16 +27,16 @@ function aplicarEtiqueta(s: State, contactId: string, tagId: string): State {
 }
 
 const Vazio = ({ children }: { children: ReactNode }) => (
-  <div className="card p-8 text-center text-black/60 flex flex-col items-center gap-3">
-    <img src="/mascote.webp" alt="" className="w-24 rounded-2xl" />{children}
+  <div className="card p-8 text-center text-cream/60 flex flex-col items-center gap-3">
+    <div className="text-4xl">✨</div>{children}
   </div>
 )
 
 function Modal({ titulo, fechar, children }: { titulo: string; fechar: () => void; children: ReactNode }) {
   return (
     <div className="fixed inset-0 z-40 bg-black/40 flex items-end md:items-center justify-center" onClick={fechar}>
-      <div className="bg-white w-full md:max-w-md rounded-t-3xl md:rounded-3xl p-5 max-h-[90dvh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center mb-4"><h2 className="font-extrabold text-lg flex-1">{titulo}</h2><button onClick={fechar} className="text-2xl leading-none text-black/40">×</button></div>
+      <div className="bg-card w-full md:max-w-md rounded-t-3xl md:rounded-3xl p-5 max-h-[90dvh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center mb-4"><h2 className="font-extrabold text-lg flex-1">{titulo}</h2><button onClick={fechar} className="text-2xl leading-none text-cream/40">×</button></div>
         {children}
       </div>
     </div>
@@ -47,7 +47,7 @@ const Etiqueta = ({ s, tagId }: { s: State; tagId: string | null }) => {
   const t = s.tags.find(x => x.id === tagId)
   return t
     ? <span className="rounded-full px-2 py-0.5 text-[11px] font-bold text-white whitespace-nowrap" style={{ background: t.cor }}>{t.nome}</span>
-    : <span className="rounded-full px-2 py-0.5 text-[11px] font-bold bg-green-100 text-green-700">Novo · etiquetar</span>
+    : <span className="rounded-full px-2 py-0.5 text-[11px] font-bold bg-green-500/15 text-green-400">Novo · etiquetar</span>
 }
 
 const Avatar = ({ nome }: { nome: string }) => (
@@ -60,10 +60,10 @@ export function ChamarHoje() {
   const itens = chamarHoje(s)
   const [edit, setEdit] = useState<Record<string, string>>({})
   const total = itens.reduce((t, i) => t + i.valor, 0)
-  if (!itens.length) return <Vazio><p className="font-bold text-lg text-ink">Tudo em dia por hoje.</p><p>Amanhã cedo aparece quem precisa ser chamado.</p></Vazio>
+  if (!itens.length) return <Vazio><p className="font-bold text-lg text-cream">Tudo em dia por hoje.</p><p>Amanhã cedo aparece quem precisa ser chamado.</p></Vazio>
   return (
     <div className="space-y-3">
-      <p className="text-sm text-black/60"><b className="text-ink">{itens.length} pessoas</b> para chamar hoje · {brl(total)} em jogo. Leva uns 15 minutos.</p>
+      <p className="text-sm text-cream/60"><b className="text-cream">{itens.length} pessoas</b> para chamar hoje · {brl(total)} em jogo. Leva uns 15 minutos.</p>
       {itens.map(i => {
         const k = i.contact.id + i.tipo
         const texto = edit[k] ?? i.texto
@@ -74,7 +74,7 @@ export function ChamarHoje() {
               <div className="flex-1 min-w-0">
                 <p className="font-bold">{i.contact.nome}</p>
                 <p className="text-sm font-semibold" style={{ color: i.cor }}>{i.motivo}</p>
-                {i.contact.atentar && <p className="text-xs mt-1 bg-amber-50 text-amber-800 rounded-lg px-2 py-1 inline-block">⚠️ {i.contact.atentar}</p>}
+                {i.contact.atentar && <p className="text-xs mt-1 bg-amber-400/10 text-amber-300 rounded-lg px-2 py-1 inline-block">⚠️ {i.contact.atentar}</p>}
               </div>
               {i.valor > 0 && <p className="font-extrabold">{brl(i.valor)}</p>}
             </div>
@@ -120,11 +120,11 @@ export function WhatsApp() {
   }))
 
   const menuEtiqueta = (cid: string) => menu === cid && (
-    <div className="absolute z-30 right-0 top-7 bg-white card p-1 w-56 shadow-xl" onClick={e => e.stopPropagation()}>
+    <div className="absolute z-30 right-0 top-7 bg-card card p-1 w-56 shadow-xl" onClick={e => e.stopPropagation()}>
       {s.tags.map(t => (
-        <button key={t.id} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-black/5 text-sm text-left"
+        <button key={t.id} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5 text-sm text-left"
           onClick={() => { set(st => aplicarEtiqueta(st, cid, t.id)); setMenu(null); if (t.painel) toast(`Foi para o Painel em "Para organizar"`) }}>
-          <span className="w-3 h-3 rounded-full" style={{ background: t.cor }} />{t.nome}{t.painel && <span className="ml-auto text-[10px] text-black/40">→ Painel</span>}
+          <span className="w-3 h-3 rounded-full" style={{ background: t.cor }} />{t.nome}{t.painel && <span className="ml-auto text-[10px] text-cream/40">→ Painel</span>}
         </button>
       ))}
     </div>
@@ -133,26 +133,26 @@ export function WhatsApp() {
   return (
     <div className="card overflow-hidden md:grid md:grid-cols-[320px_1fr] h-[calc(100dvh-170px)] md:h-[calc(100dvh-110px)]" onClick={() => setMenu(null)}>
       {/* lista */}
-      <div className={`${aberto ? 'hidden md:flex' : 'flex'} flex-col border-r border-black/5 min-h-0 h-full`}>
-        <div className="p-3 space-y-2 border-b border-black/5">
+      <div className={`${aberto ? 'hidden md:flex' : 'flex'} flex-col border-r border-white/10 min-h-0 h-full`}>
+        <div className="p-3 space-y-2 border-b border-white/10">
           <input className="input" placeholder="Buscar conversa" value={busca} onChange={e => setBusca(e.target.value)} />
           <div className="flex gap-1 overflow-x-auto text-xs">
             {[{ id: '', nome: 'Todas' }, { id: 'novo', nome: 'Novos' }, ...s.tags].map(t => (
-              <button key={t.id} onClick={() => setFiltro(t.id)} className={`rounded-full px-3 py-1 whitespace-nowrap font-semibold ${filtro === t.id ? 'bg-ink text-cream' : 'bg-black/5'}`}>{t.nome}</button>
+              <button key={t.id} onClick={() => setFiltro(t.id)} className={`rounded-full px-3 py-1 whitespace-nowrap font-semibold ${filtro === t.id ? 'bg-cream text-ink' : 'bg-white/5'}`}>{t.nome}</button>
             ))}
           </div>
         </div>
         <div className="overflow-y-auto flex-1">
           {lista.map(({ c, ult }) => (
-            <div key={c.id} onClick={() => setAberto(c.id)} className={`flex gap-3 px-3 py-3 border-b border-black/5 cursor-pointer hover:bg-black/[.02] ${aberto === c.id ? 'bg-cream/50' : ''}`}>
+            <div key={c.id} onClick={() => setAberto(c.id)} className={`flex gap-3 px-3 py-3 border-b border-white/10 cursor-pointer hover:bg-white/[.03] ${aberto === c.id ? 'bg-white/10' : ''}`}>
               <Avatar nome={c.nome} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="font-bold truncate flex-1">{c.nome}</p>
-                  <span className="text-[11px] text-black/40">{ult && hora(ult.ts)}</span>
+                  <span className="text-[11px] text-cream/40">{ult && hora(ult.ts)}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <p className="text-sm text-black/50 truncate flex-1">{ult?.dir === 'out' && '✓✓ '}{ult?.texto}</p>
+                  <p className="text-sm text-cream/50 truncate flex-1">{ult?.dir === 'out' && '✓✓ '}{ult?.texto}</p>
                   <div className="relative" onClick={e => { e.stopPropagation(); setMenu(menu === c.id ? null : c.id) }}>
                     <button><Etiqueta s={s} tagId={c.tagId} /></button>
                     {menuEtiqueta(c.id)}
@@ -167,40 +167,40 @@ export function WhatsApp() {
       {/* conversa */}
       {c ? (
         <div className="flex flex-col min-h-0 h-full">
-          <div className="flex items-center gap-3 p-3 border-b border-black/5">
+          <div className="flex items-center gap-3 p-3 border-b border-white/10">
             <button className="md:hidden text-xl" onClick={() => setAberto(null)}>←</button>
             <Avatar nome={c.nome} />
-            <div className="flex-1 min-w-0"><p className="font-bold truncate">{c.nome}</p><p className="text-xs text-black/50">{c.fone}</p></div>
+            <div className="flex-1 min-w-0"><p className="font-bold truncate">{c.nome}</p><p className="text-xs text-cream/50">{c.fone}</p></div>
             <button className="btn-ghost text-xs" onClick={() => setLado(!lado)}>{lado ? 'Conversa' : 'Resumo'}</button>
           </div>
           {lado ? (
             <div className="p-4 space-y-3 overflow-y-auto text-sm">
               <div><p className="label">Etiqueta</p><div className="relative inline-block" onClick={e => { e.stopPropagation(); setMenu(menu === c.id ? null : c.id) }}><button><Etiqueta s={s} tagId={c.tagId} /></button>{menuEtiqueta(c.id)}</div></div>
-              <div><p className="label">No painel</p>{card ? <p>{COLUNAS.find(x => x.id === card.coluna)?.nome} · {s.services.find(x => x.id === card.serviceId)?.nome} · <b>{brl(card.total)}</b></p> : <p className="text-black/40">Sem card</p>}</div>
+              <div><p className="label">No painel</p>{card ? <p>{COLUNAS.find(x => x.id === card.coluna)?.nome} · {s.services.find(x => x.id === card.serviceId)?.nome} · <b>{brl(card.total)}</b></p> : <p className="text-cream/40">Sem card</p>}</div>
               <div><p className="label">Algo a se atentar</p>
                 <input className="input" value={c.atentar} placeholder="Ex.: tem medo de agulha" onChange={e => set(st => ({ ...st, contacts: st.contacts.map(x => (x.id === c.id ? { ...x, atentar: e.target.value } : x)) }))} /></div>
-              <div><p className="label">Próxima consulta</p>{consulta ? <p>{fmtDia(consulta.data)} às {consulta.hora} · {s.profs.find(p => p.id === consulta.profId)?.nome}</p> : <p className="text-black/40">Nenhuma</p>}</div>
+              <div><p className="label">Próxima consulta</p>{consulta ? <p>{fmtDia(consulta.data)} às {consulta.hora} · {s.profs.find(p => p.id === consulta.profId)?.nome}</p> : <p className="text-cream/40">Nenhuma</p>}</div>
               <button className="btn-dark w-full" onClick={() => { set(st => aplicarEtiqueta(st, c.id, 't2')); toast('Etiqueta "Esperando agendamento". Ela aparece na Agenda.') }}>📅 Agendar</button>
             </div>
           ) : (
             <>
-              <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-[#efe7dc]">
+              <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-[#0b141a]">
                 {msgs.map(m => (
-                  <div key={m.id} className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm shadow-sm ${m.dir === 'out' ? 'ml-auto bg-[#d9fdd3]' : 'bg-white'}`}>
-                    {m.texto}<span className="block text-right text-[10px] text-black/40">{hora(m.ts)}{m.dir === 'out' && ' ✓✓'}</span>
+                  <div key={m.id} className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm shadow-sm ${m.dir === 'out' ? 'ml-auto bg-[#005c4b]' : 'bg-[#202c33]'}`}>
+                    {m.texto}<span className="block text-right text-[10px] text-cream/40">{hora(m.ts)}{m.dir === 'out' && ' ✓✓'}</span>
                   </div>
                 ))}
               </div>
-              <div className="p-2 flex gap-2 border-t border-black/5">
+              <div className="p-2 flex gap-2 border-t border-white/10">
                 <input className="input" placeholder="Mensagem" value={texto} onChange={e => setTexto(e.target.value)} onKeyDown={e => e.key === 'Enter' && mandar()} />
                 <button className="btn-send" onClick={mandar}>➤</button>
               </div>
-              <button className="text-[11px] text-black/40 underline pb-2" onClick={simularResposta}>(demo) simular resposta da paciente</button>
+              <button className="text-[11px] text-cream/40 underline pb-2" onClick={simularResposta}>(demo) simular resposta da paciente</button>
             </>
           )}
         </div>
       ) : (
-        <div className="hidden md:flex items-center justify-center text-black/40 flex-col gap-2"><img src="/mascote.webp" className="w-28 rounded-2xl" alt="" />Escolha uma conversa</div>
+        <div className="hidden md:flex items-center justify-center text-cream/40 flex-col gap-2"><span className="text-4xl">💬</span>Escolha uma conversa</div>
       )}
     </div>
   )
@@ -214,19 +214,19 @@ export function Painel() {
 
   return (
     <div>
-      <p className="text-sm text-black/60 mb-3 hidden md:block">Arraste o card para a coluna certa. No celular, use “Mover para”.</p>
+      <p className="text-sm text-cream/60 mb-3 hidden md:block">Arraste o card para a coluna certa. No celular, use “Mover para”.</p>
       <div className="flex gap-3 overflow-x-auto pb-4 snap-x">
         {COLUNAS.map(col => {
           const cards = s.quotes.filter(q => q.coluna === col.id)
           const soma = cards.reduce((t, q) => t + (col.id === 'fechou_parcial' ? q.total - q.fechado : col.id === 'fechou' ? q.fechado : q.total), 0)
           return (
-            <div key={col.id} className="snap-start shrink-0 w-[82vw] sm:w-72 bg-black/[.04] rounded-2xl p-2 min-h-60"
+            <div key={col.id} className="snap-start shrink-0 w-[82vw] sm:w-72 bg-white/[.03] rounded-2xl p-2 min-h-60"
               onDragOver={e => e.preventDefault()}
               onDrop={() => { const q = s.quotes.find(x => x.id === arrastando); if (q && q.coluna !== col.id) setAbrir({ q, coluna: col.id }); setArrastando(null) }}>
               <div className="flex items-center gap-2 px-2 py-1 mb-2">
                 <span className="w-2.5 h-2.5 rounded-full" style={{ background: col.cor }} />
-                <p className="font-extrabold text-sm flex-1">{col.nome} <span className="text-black/40">{cards.length}</span></p>
-                {soma > 0 && <p className="text-xs font-bold text-black/50">{col.id === 'fechou_parcial' ? 'falta ' : ''}{brl(soma)}</p>}
+                <p className="font-extrabold text-sm flex-1">{col.nome} <span className="text-cream/40">{cards.length}</span></p>
+                {soma > 0 && <p className="text-xs font-bold text-cream/50">{col.id === 'fechou_parcial' ? 'falta ' : ''}{brl(soma)}</p>}
               </div>
               <div className="space-y-2">
                 {cards.map(q => {
@@ -234,15 +234,15 @@ export function Painel() {
                   const frio = esfriou(s, q)
                   return (
                     <div key={q.id} draggable onDragStart={() => setArrastando(q.id)} onClick={() => setAbrir({ q, coluna: q.coluna })}
-                      className={`rounded-2xl border shadow-sm p-3 cursor-grab active:cursor-grabbing ${frio ? 'bg-blue-50 border-blue-300' : 'bg-white border-black/5'}`}>
+                      className={`rounded-2xl border shadow-sm p-3 cursor-grab active:cursor-grabbing ${frio ? 'bg-blue-500/10 border-blue-400/50' : 'bg-card border-white/10'}`}>
                       <div className="flex items-start gap-2">
                         <p className="font-bold flex-1">{c.nome}</p>
                         {q.total > 0 && <p className="font-extrabold text-sm">{brl(q.total)}</p>}
                       </div>
-                      <p className="text-xs text-black/50">{s.services.find(x => x.id === q.serviceId)?.nome}{q.coluna === 'fechou_parcial' && ` · fechou ${brl(q.fechado)}`}</p>
-                      {frio && <p className="text-xs font-bold text-blue-700 mt-1">❄️ esfriou · {diasDesde(q.ultimoContato)} dias sem contato</p>}
-                      {(q.atentar || c.atentar) && <p className="text-xs mt-1 text-amber-800">⚠️ {q.atentar || c.atentar}</p>}
-                      <select className="mt-2 text-xs bg-black/5 rounded-lg px-2 py-1 w-full" value="" onClick={e => e.stopPropagation()}
+                      <p className="text-xs text-cream/50">{s.services.find(x => x.id === q.serviceId)?.nome}{q.coluna === 'fechou_parcial' && ` · fechou ${brl(q.fechado)}`}</p>
+                      {frio && <p className="text-xs font-bold text-blue-300 mt-1">❄️ esfriou · {diasDesde(q.ultimoContato)} dias sem contato</p>}
+                      {(q.atentar || c.atentar) && <p className="text-xs mt-1 text-amber-300">⚠️ {q.atentar || c.atentar}</p>}
+                      <select className="mt-2 text-xs bg-white/5 rounded-lg px-2 py-1 w-full" value="" onClick={e => e.stopPropagation()}
                         onChange={e => setAbrir({ q, coluna: e.target.value as Coluna })}>
                         <option value="">Mover para…</option>
                         {COLUNAS.filter(x => x.id !== q.coluna).map(x => <option key={x.id} value={x.id}>{x.nome}</option>)}
@@ -293,12 +293,12 @@ function CardModal({ q, coluna, fechar, salvar }: { q: Quote; coluna: Coluna; fe
           {f.coluna === 'fechou_parcial' && <div><label className="label">Quanto fechou</label>
             <input className="input" inputMode="numeric" value={f.fechado ? brl(f.fechado) : ''} onChange={e => setF({ ...f, fechado: num(e.target.value) })} /></div>}
         </div>
-        {f.coluna === 'fechou_parcial' && f.total > f.fechado && <p className="text-xs text-teal-700 font-semibold">{brl(f.total - f.fechado)} continuam parados até ela fechar o resto.</p>}
+        {f.coluna === 'fechou_parcial' && f.total > f.fechado && <p className="text-xs text-teal-300 font-semibold">{brl(f.total - f.fechado)} continuam parados até ela fechar o resto.</p>}
         <div><label className="label">Algo a se atentar</label>
           <input className="input" placeholder="Ex.: tem medo de agulha, só pode à tarde" value={f.atentar} onChange={e => setF({ ...f, atentar: e.target.value })} /></div>
-        <div className="rounded-2xl bg-cream/60 p-3">
+        <div className="rounded-2xl bg-white/5 p-3">
           <p className="label">💡 Ideia do que enviar</p>
-          <textarea className="input min-h-24 bg-white" value={texto} onChange={e => setMsg(e.target.value)} />
+          <textarea className="input min-h-24 bg-card" value={texto} onChange={e => setMsg(e.target.value)} />
         </div>
         <div className="flex gap-2">
           <button className="btn-ghost flex-1" onClick={() => salvar({ ...f, fechado: f.coluna === 'fechou' ? f.total : f.fechado })}>Agora não</button>
@@ -347,13 +347,13 @@ export function Agenda() {
     const p = s.profs.find(x => x.id === profId)!
     return (
       <div key={profId} className={`flex-1 min-w-0 ${profId !== profMobile ? 'hidden md:block' : ''}`}>
-        <p className="text-center font-bold text-sm py-2 sticky top-0 bg-white border-b border-black/5" style={{ color: p.cor }}>{p.nome}</p>
+        <p className="text-center font-bold text-sm py-2 sticky top-0 bg-card border-b border-white/10" style={{ color: p.cor }}>{p.nome}</p>
         {slots.map(h => {
           const fora = hm(h) < hm(p.inicio) || hm(h) >= hm(p.fim)
           const a = s.appts.find(x => x.profId === profId && x.data === dia && x.hora === h && x.status !== 'cancelado')
           const ocupado = s.appts.some(x => x.profId === profId && x.data === dia && x.status !== 'cancelado' && hm(x.hora) < hm(h) && hm(x.hora) + dur(x) > hm(h))
           return (
-            <div key={h} className={`h-12 border-b border-black/5 px-1 relative ${fora ? 'bg-black/[.04]' : 'hover:bg-cream/40 cursor-pointer'}`}
+            <div key={h} className={`h-12 border-b border-white/10 px-1 relative ${fora ? 'bg-white/[.03]' : 'hover:bg-white/5 cursor-pointer'}`}
               onDragOver={e => e.preventDefault()} onDrop={() => soltar(profId, h)}
               onClick={() => !a && !ocupado && (fora ? toast('Fora do expediente de ' + p.nome) : setNovo({ profId, hora: h }))}>
               {a && (
@@ -373,29 +373,29 @@ export function Agenda() {
   return (
     <div className="md:grid md:grid-cols-[1fr_240px] gap-4 space-y-4 md:space-y-0">
       <div className="card overflow-hidden">
-        <div className="flex items-center gap-2 p-3 border-b border-black/5">
+        <div className="flex items-center gap-2 p-3 border-b border-white/10">
           <button className="btn-ghost" onClick={() => setDia(addDias(dia, -1))}>‹</button>
           <p className="font-bold flex-1 text-center capitalize">{dia === hoje() ? 'Hoje, ' : ''}{fmtDia(dia)}</p>
           <button className="btn-ghost" onClick={() => setDia(addDias(dia, 1))}>›</button>
         </div>
-        <div className="flex md:hidden gap-1 p-2 border-b border-black/5">
-          {s.profs.map(p => <button key={p.id} onClick={() => setProfMobile(p.id)} className={`flex-1 rounded-lg py-1.5 text-xs font-bold ${profMobile === p.id ? 'bg-ink text-cream' : 'bg-black/5'}`}>{p.nome}</button>)}
+        <div className="flex md:hidden gap-1 p-2 border-b border-white/10">
+          {s.profs.map(p => <button key={p.id} onClick={() => setProfMobile(p.id)} className={`flex-1 rounded-lg py-1.5 text-xs font-bold ${profMobile === p.id ? 'bg-cream text-ink' : 'bg-white/5'}`}>{p.nome}</button>)}
         </div>
         <div className="flex max-h-[65dvh] overflow-y-auto">
-          <div className="w-12 shrink-0 text-[10px] text-black/40 text-right pr-1"><div className="h-[37px]" />{slots.map(h => <div key={h} className="h-12">{h}</div>)}</div>
+          <div className="w-12 shrink-0 text-[10px] text-cream/40 text-right pr-1"><div className="h-[37px]" />{slots.map(h => <div key={h} className="h-12">{h}</div>)}</div>
           {s.profs.map(p => coluna(p.id))}
         </div>
       </div>
 
       <div className="card p-3 h-fit">
         <p className="font-extrabold text-sm mb-1">Esperando agendamento</p>
-        <p className="text-xs text-black/50 mb-3">Arraste para um horário ou toque para agendar.</p>
-        {esperando.length === 0 && <p className="text-sm text-black/40">Ninguém esperando 🎉</p>}
+        <p className="text-xs text-cream/50 mb-3">Arraste para um horário ou toque para agendar.</p>
+        {esperando.length === 0 && <p className="text-sm text-cream/40">Ninguém esperando 🎉</p>}
         {esperando.map(c => (
           <div key={c.id} draggable onDragStart={() => setArrasta({ tipo: 'contato', id: c.id })}
             onClick={() => setNovo({ profId: profMobile, hora: s.profs.find(p => p.id === profMobile)!.inicio, contactId: c.id })}
-            className="flex items-center gap-2 p-2 rounded-xl bg-pink-50 mb-2 cursor-grab">
-            <Avatar nome={c.nome} /><div className="min-w-0"><p className="font-bold text-sm truncate">{c.nome}</p>{c.atentar && <p className="text-[11px] text-amber-800 truncate">⚠️ {c.atentar}</p>}</div>
+            className="flex items-center gap-2 p-2 rounded-xl bg-pink-500/10 mb-2 cursor-grab">
+            <Avatar nome={c.nome} /><div className="min-w-0"><p className="font-bold text-sm truncate">{c.nome}</p>{c.atentar && <p className="text-[11px] text-amber-300 truncate">⚠️ {c.atentar}</p>}</div>
           </div>
         ))}
       </div>
@@ -444,7 +444,7 @@ function NovaConsulta({ profId, hora, contactId, dia, problema, fechar }: { prof
             <select className="input" value={f.profId} onChange={e => setF({ ...f, profId: e.target.value })}>{s.profs.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}</select></div>
           <div><label className="label">Horário</label><input className="input" type="time" step={1800} value={f.hora} onChange={e => setF({ ...f, hora: e.target.value })} /></div>
         </div>
-        {erro && <p className="text-sm text-red-600 font-semibold">⛔ {erro}</p>}
+        {erro && <p className="text-sm text-red-400 font-semibold">⛔ {erro}</p>}
         <button className="btn-dark w-full py-3" disabled={!f.contactId || !!erro} onClick={() => {
           set(st => ({
             ...st,
@@ -462,7 +462,7 @@ function NovaConsulta({ profId, hora, contactId, dia, problema, fechar }: { prof
 export function Sumidos() {
   const { s, set, toast } = useApp()
   const lista = sumidos(s).filter(x => !s.envios.some(e => e.contactId === x.contact.id && e.dia === hoje()))
-  if (!lista.length) return <Vazio><p className="font-bold text-ink">Ninguém sumido agora.</p><p>Quem passar do prazo de retorno aparece aqui sozinho.</p></Vazio>
+  if (!lista.length) return <Vazio><p className="font-bold text-cream">Ninguém sumido agora.</p><p>Quem passar do prazo de retorno aparece aqui sozinho.</p></Vazio>
   return (
     <div className="space-y-3">
       {lista.map(x => {
@@ -470,7 +470,7 @@ export function Sumidos() {
         return (
           <div key={x.contact.id} className="card p-4 flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="flex items-center gap-3 flex-1"><Avatar nome={x.contact.nome} />
-              <div><p className="font-bold">{x.contact.nome}</p><p className="text-sm text-violet-700 font-semibold">Há {x.dias} dias sem voltar · {x.service.nome} em {fmtDia(x.proc.data)}</p></div></div>
+              <div><p className="font-bold">{x.contact.nome}</p><p className="text-sm text-violet-300 font-semibold">Há {x.dias} dias sem voltar · {x.service.nome} em {fmtDia(x.proc.data)}</p></div></div>
             <button className="btn-send" onClick={() => { set(st => enviar(st, x.contact.id, texto, 'sumido')); toast('Mensagem de volta na fila do WhatsApp') }}>Enviar ➤</button>
           </div>
         )
@@ -490,7 +490,7 @@ export function Resumo() {
   const chamadas = new Set(s.envios.filter(e => e.motivo !== 'respondeu').map(e => e.contactId)).size
   const responderam = new Set(s.envios.filter(e => e.motivo === 'respondeu').map(e => e.contactId)).size
   const Box = ({ t, v, cor }: { t: string; v: string; cor?: string }) => (
-    <div className="card p-4"><p className="text-xs font-bold text-black/50 uppercase">{t}</p><p className="text-2xl font-extrabold" style={{ color: cor }}>{v}</p></div>
+    <div className="card p-4"><p className="text-xs font-bold text-cream/50 uppercase">{t}</p><p className="text-2xl font-extrabold" style={{ color: cor }}>{v}</p></div>
   )
   return (
     <div className="space-y-4">
@@ -504,8 +504,8 @@ export function Resumo() {
       <div className="card p-4">
         <p className="font-extrabold mb-3">Antes e agora</p>
         <div className="grid grid-cols-2 gap-4 text-sm">
-          <div className="rounded-xl bg-black/5 p-3"><p className="text-black/50 font-semibold">Parado no dia 7</p><p className="text-2xl font-extrabold">{brl(s.dia7.parado)}</p><p className="text-black/50">{s.dia7.emDuvida} em dúvida</p></div>
-          <div className="rounded-xl bg-cream p-3"><p className="text-black/50 font-semibold">Parado hoje</p><p className="text-2xl font-extrabold">{brl(valorParado(s))}</p><p className="text-black/50">{s.quotes.filter(q => q.coluna === 'em_duvida').length} em dúvida</p></div>
+          <div className="rounded-xl bg-white/5 p-3"><p className="text-cream/50 font-semibold">Parado no dia 7</p><p className="text-2xl font-extrabold">{brl(s.dia7.parado)}</p><p className="text-cream/50">{s.dia7.emDuvida} em dúvida</p></div>
+          <div className="rounded-xl bg-cream p-3"><p className="text-cream/50 font-semibold">Parado hoje</p><p className="text-2xl font-extrabold">{brl(valorParado(s))}</p><p className="text-cream/50">{s.quotes.filter(q => q.coluna === 'em_duvida').length} em dúvida</p></div>
         </div>
         <ul className="mt-4 text-sm space-y-1">
           <li>📣 Pessoas chamadas: <b>{chamadas}</b></li>
@@ -534,10 +534,10 @@ export function Ajustes() {
   return (
     <div className="space-y-3">
       <div className="flex gap-1 overflow-x-auto">
-        {abas.map(([id, n]) => <button key={id} onClick={() => setAba(id)} className={`rounded-full px-4 py-1.5 text-sm font-bold whitespace-nowrap ${aba === id ? 'bg-ink text-cream' : 'bg-black/5'}`}>{n}</button>)}
+        {abas.map(([id, n]) => <button key={id} onClick={() => setAba(id)} className={`rounded-full px-4 py-1.5 text-sm font-bold whitespace-nowrap ${aba === id ? 'bg-cream text-ink' : 'bg-white/5'}`}>{n}</button>)}
       </div>
 
-      {aba === 'servicos' && <div className="card divide-y divide-black/5">
+      {aba === 'servicos' && <div className="card divide-y divide-white/10">
         {s.services.map((x, i) => (
           <div key={x.id} className="p-3 grid grid-cols-2 md:grid-cols-4 gap-2 items-end">
             <div className="col-span-2 md:col-span-1"><label className="label">Serviço</label><input className="input" value={x.nome} onChange={e => up('services', s.services.map((y, j) => (j === i ? { ...y, nome: e.target.value } : y)))} /></div>
@@ -549,7 +549,7 @@ export function Ajustes() {
         <div className="p-3"><button className="btn-ghost" onClick={() => up('services', [...s.services, { id: uid(), nome: 'Novo serviço', preco: 0, duracao: 30, retorno: 90 }])}>+ Adicionar serviço</button></div>
       </div>}
 
-      {aba === 'etiquetas' && <div className="card divide-y divide-black/5">
+      {aba === 'etiquetas' && <div className="card divide-y divide-white/10">
         {s.tags.map((t, i) => (
           <div key={t.id} className="p-3 flex items-center gap-2">
             <input type="color" value={t.cor} className="w-9 h-9 rounded-lg" onChange={e => up('tags', s.tags.map((y, j) => (j === i ? { ...y, cor: e.target.value } : y)))} />
@@ -560,7 +560,7 @@ export function Ajustes() {
         <div className="p-3"><button className="btn-ghost" onClick={() => up('tags', [...s.tags, { id: uid(), nome: 'Nova etiqueta', cor: '#6366f1', painel: false }])}>+ Nova etiqueta</button></div>
       </div>}
 
-      {aba === 'profs' && <div className="card divide-y divide-black/5">
+      {aba === 'profs' && <div className="card divide-y divide-white/10">
         {s.profs.map((p, i) => (
           <div key={p.id} className="p-3 grid grid-cols-2 md:grid-cols-4 gap-2 items-end">
             <div className="col-span-2"><label className="label">Nome</label><input className="input" value={p.nome} onChange={e => up('profs', s.profs.map((y, j) => (j === i ? { ...y, nome: e.target.value } : y)))} /></div>
@@ -570,8 +570,8 @@ export function Ajustes() {
         ))}
       </div>}
 
-      {aba === 'mensagens' && <div className="card divide-y divide-black/5">
-        <p className="p-3 text-xs text-black/50">Use {'{nome}'}, {'{procedimento}'}, {'{valor}'} e {'{clinica}'}. Eles são trocados sozinhos.</p>
+      {aba === 'mensagens' && <div className="card divide-y divide-white/10">
+        <p className="p-3 text-xs text-cream/50">Use {'{nome}'}, {'{procedimento}'}, {'{valor}'} e {'{clinica}'}. Eles são trocados sozinhos.</p>
         {Object.entries(s.templates).map(([k, v]) => (
           <div key={k} className="p-3"><label className="label">{k.replace(/_/g, ' ').replace('ideia', 'Ideia ·')}</label>
             <textarea className="input min-h-16" value={v} onChange={e => up('templates', { ...s.templates, [k]: e.target.value })} /></div>
@@ -581,7 +581,7 @@ export function Ajustes() {
       {aba === 'clinica' && <div className="card p-4 space-y-3 max-w-md">
         <div><label className="label">Nome da clínica</label><input className="input" value={s.clinica.nome} onChange={e => up('clinica', { ...s.clinica, nome: e.target.value })} /></div>
         <div><label className="label">Esfria depois de quantos dias sem contato</label><input className="input" inputMode="numeric" value={s.clinica.prazoEsfriar} onChange={e => up('clinica', { ...s.clinica, prazoEsfriar: Number(e.target.value) || 1 })} /></div>
-        <button className="btn-ghost text-red-600" onClick={() => { if (confirm('Voltar aos dados de exemplo?')) { reset(); toast('Demonstração reiniciada') } }}>Reiniciar demonstração</button>
+        <button className="btn-ghost text-red-400" onClick={() => { if (confirm('Voltar aos dados de exemplo?')) { reset(); toast('Demonstração reiniciada') } }}>Reiniciar demonstração</button>
       </div>}
 
       {aba === 'whats' && <WhatsAppAjustes />}
@@ -596,7 +596,7 @@ function WhatsAppAjustes() {
       <p className="font-bold">WhatsApp da clínica</p>
       <ConectarWhatsApp />
       {st?.estado === 'open' && <Desconectar />}
-      <p className="text-xs text-black/50">Proteção do número: até 40 mensagens por dia, intervalo de 20 a 60s entre envios, só das 8h às 20h, nada de envio em massa.</p>
+      <p className="text-xs text-cream/50">Proteção do número: até 40 mensagens por dia, intervalo de 20 a 60s entre envios, só das 8h às 20h, nada de envio em massa.</p>
     </div>
   )
 }

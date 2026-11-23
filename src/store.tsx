@@ -7,7 +7,7 @@ import { seed, type State } from './data'
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
 const key = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
 export const supabase = url && key ? createClient(url, key) : null
-const LS = 'painel-da-cria-demo-v1'
+const LS = 'painel-da-cria-demo-v2'
 
 function carregarLocal(): State {
   try { const r = localStorage.getItem(LS); if (r) return JSON.parse(r) } catch { /* sem storage */ }
