@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #0b0b0b;
+  --color-cream: #fff1dc;
+  --color-paper: #f7f4ef;
+  --font-sans: "Nunito", ui-sans-serif, system-ui, sans-serif;
+}
+
+body { background: var(--color-paper); color: #1c1c1c; }
+.card { @apply bg-white rounded-2xl border border-black/5 shadow-sm; }
+.btn { @apply inline-flex items-center justify-center gap-1 rounded-xl px-3 py-2 text-sm font-semibold transition active:scale-95 disabled:opacity-40; }
+.btn-send { @apply inline-flex items-center justify-center gap-1 rounded-xl px-3 py-2 text-sm font-semibold transition active:scale-95 disabled:opacity-40 bg-green-600 text-white hover:bg-green-700; }
+.btn-dark { @apply inline-flex items-center justify-center gap-1 rounded-xl px-3 py-2 text-sm font-semibold transition active:scale-95 disabled:opacity-40 bg-ink text-cream hover:bg-black; }
+.btn-ghost { @apply inline-flex items-center justify-center gap-1 rounded-xl px-3 py-2 text-sm font-semibold transition active:scale-95 disabled:opacity-40 bg-black/5 hover:bg-black/10; }
+.input { @apply w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm outline-none focus:border-black/40; }
+.label { @apply block text-xs font-semibold text-black/60 mb-1; }
+
+@media print {
+  .no-print { display: none !important; }
+  body { background: white; }
+}
