@@ -108,7 +108,7 @@ function Shell({ papel, sair }: { papel: Papel; sair: () => void }) {
             ⚠️ WhatsApp desconectado. {papel === 'dona' ? 'Toque para conectar em Ajustes.' : 'Avise a dona.'}
           </button>
         )}
-        <main className="flex-1 p-4 pb-28 md:pb-6 max-w-6xl w-full mx-auto">{corpo}</main>
+        <main className={`flex-1 p-4 pb-28 md:pb-6 w-full mx-auto ${tela === 'painel' ? 'max-w-none' : 'max-w-6xl'}`}>{corpo}</main>
       </div>
 
       {/* menu de baixo (celular) */}

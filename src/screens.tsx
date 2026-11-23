@@ -227,7 +227,7 @@ export function Painel() {
           const cards = s.quotes.filter(q => q.coluna === col.id)
           const soma = cards.reduce((t, q) => t + (col.id === 'fechou_parcial' ? q.total - q.fechado : col.id === 'fechou' ? q.fechado : q.total), 0)
           return (
-            <div key={col.id} className="snap-start shrink-0 w-[82vw] sm:w-72 bg-white/[.03] rounded-2xl p-2 min-h-60"
+            <div key={col.id} className="snap-start shrink-0 w-[82vw] sm:w-72 lg:w-auto lg:shrink lg:flex-1 lg:min-w-52 bg-white/[.04] border border-white/5 rounded-2xl p-2 min-h-[calc(100dvh-200px)]"
               onDragOver={e => e.preventDefault()}
               onDrop={() => { const q = s.quotes.find(x => x.id === arrastando); if (q && q.coluna !== col.id) setAbrir({ q, coluna: col.id }); setArrastando(null) }}>
               <div className="flex items-center gap-2 px-2 py-1 mb-2">
@@ -503,16 +503,16 @@ export function Resumo() {
     <div className="space-y-4">
       <div className="hidden print:flex items-center gap-3 mb-4"><img src="/favicon.svg" className="w-12" alt="" /><div><p className="font-extrabold text-xl">{s.clinica.nome}</p><p className="text-sm">Relatório do dia 30</p></div></div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Box t="A receber (fechado)" v={brl(fechado)} cor="#16a34a" />
-        <Box t="Em dúvida" v={brl(duvida)} cor="#d97706" />
-        <Box t="Recusou" v={brl(recusou)} cor="#dc2626" />
-        <Box t="Recuperado" v={brl(recuperado)} cor="#2563eb" />
+        <Box t="A receber (fechado)" v={brl(fechado)} cor="#4ade80" />
+        <Box t="Em dúvida" v={brl(duvida)} cor="#fbbf24" />
+        <Box t="Recusou" v={brl(recusou)} cor="#f87171" />
+        <Box t="Recuperado" v={brl(recuperado)} cor="#60a5fa" />
       </div>
       <div className="card p-4">
         <p className="font-extrabold mb-3">Antes e agora</p>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div className="rounded-xl bg-white/5 p-3"><p className="text-cream/50 font-semibold">Parado no dia 7</p><p className="text-2xl font-extrabold">{brl(s.dia7.parado)}</p><p className="text-cream/50">{s.dia7.emDuvida} em dúvida</p></div>
-          <div className="rounded-xl bg-cream p-3"><p className="text-cream/50 font-semibold">Parado hoje</p><p className="text-2xl font-extrabold">{brl(valorParado(s))}</p><p className="text-cream/50">{s.quotes.filter(q => q.coluna === 'em_duvida').length} em dúvida</p></div>
+          <div className="rounded-xl bg-amber-400/10 border border-amber-400/30 p-3"><p className="text-amber-200/70 font-semibold">Parado hoje</p><p className="text-2xl font-extrabold text-amber-400">{brl(valorParado(s))}</p><p className="text-cream/50">{s.quotes.filter(q => q.coluna === 'em_duvida').length} em dúvida</p></div>
         </div>
         <ul className="mt-4 text-sm space-y-1">
           <li>📣 Pessoas chamadas: <b>{chamadas}</b></li>
