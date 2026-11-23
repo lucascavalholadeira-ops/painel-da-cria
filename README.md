@@ -16,7 +16,7 @@ Na Vercel, em Settings > Environment Variables, adicione:
 
 | Variável | Exemplo |
 |---|---|
-| `EVOLUTION_API_URL` | `https://evolutionapi.lamarka.net` |
+| `EVOLUTION_API_URL` | `https://sua-evolution.exemplo.com` |
 | `EVOLUTION_API_KEY` | chave da Evolution |
 | `EVOLUTION_INSTANCE` | `painel-da-cria-demo` (uma por clínica) |
 
