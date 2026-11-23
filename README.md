@@ -1,6 +1,7 @@
-# Painel da Cria · Demonstração
+# Painel da Cria · OrtoClin
 
-Demo para mostrar às clínicas como o painel funciona. Dados fictícios (Clínica Elizabeth, harmonização) e WhatsApp desligado.
+Instalação da **OrtoClin, Odontologia Especializada** (Macapá, AP). Visual claro e dourado, igual ao site da clínica.
+Em modo demonstração (padrão) usa pacientes fictícios e não mostra avisos de WhatsApp. Para usar com dados reais, defina `VITE_DEMO=false`.
 
 ## Rodar
 ```bash
@@ -35,11 +36,11 @@ Localmente, `npm run dev` já roda a função (lê o `.env`).
 Com isso, as mudanças feitas na demo ficam salvas no Supabase. Sem isso, ficam no navegador de quem está usando.
 
 ## O que dá para mostrar
-- **Chamar hoje:** quem esfriou, retorno do dia 2, planos pela metade, sumidos e quem espera agendamento, com a mensagem pronta e o botão Enviar.
-- **WhatsApp:** conversas com etiqueta ao lado do nome. Marcar "Orçamento enviado" cria o card no Painel. Há um botão "(demo) simular resposta" que tira a pessoa de Chamar hoje.
-- **Painel:** arrastar entre colunas (ou "Mover para" no celular), valor, algo a se atentar e a ideia do que enviar.
-- **Agenda:** dois profissionais, bloqueio de conflito e de horário fora do expediente, arrastar quem está "Esperando agendamento".
-- **Sumidos, Resumo** (com PDF pela impressão do navegador) e **Ajustes** (só a dona).
-- **Login:** "Entrar como dona" ou "Entrar como recepção" (a recepção não vê Ajustes). O login é de mentira, só para a demo.
+- **Chamar hoje:** "Em jogo hoje" (soma da lista) separado do "Parado" do topo. Lista: manutenção do aparelho atrasada, próxima etapa do plano pelo nome, orçamentos que esfriaram, retorno do dia 2, sumidos, pedido de indicação 7 dias depois do tratamento concluído e quem espera agendamento.
+- **WhatsApp:** etiqueta ao lado do nome (Novo, Orçamento enviado, Esperando agendamento, Em tratamento (aparelho), Cliente, Não é paciente). Mensagem que começa com "Vim pelo site" cria o contato com origem Site e etiqueta Novo. Há um botão de demonstração que simula isso.
+- **Painel:** arrastar entre colunas; em "Fechou parte", plano com etapas (feita, agendada, pendente) e o "falta" calculado pelas pendentes.
+- **Agenda:** horário da clínica (seg a sex 8h–12h e 14h–19h; sáb 8h–12h e 13h–16h), bloqueio de conflito e de horário fechado, confirmação na véspera (desligada por padrão, em Ajustes > Agenda) e a aba **Manutenções do aparelho**.
+- **Agendar** a partir de Chamar hoje, do card do Painel, da conversa e de Sumidos: abre a Agenda com paciente, serviço e o primeiro horário livre.
+- **Resumo:** parado no dia 7 contra hoje, chamadas, respostas, recuperado, manutenções e comparecimento, origem dos pacientes.
 
 Em Ajustes > Clínica, "Reiniciar demonstração" volta aos dados de exemplo.

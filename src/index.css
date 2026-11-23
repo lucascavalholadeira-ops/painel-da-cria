@@ -1,28 +1,46 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ink: #000000;
-  --color-card: #111111;
-  --color-line: #1f1f1f;
-  --color-cream: #fff1dc;
-  --color-paper: #f7f4ef;
-  --font-sans: "Nunito", ui-sans-serif, system-ui, sans-serif;
+  --color-gold: #B8913F;
+  --color-gold-2: #D4B26A;
+  --color-gold-soft: #F3E7C9;
+  --color-cream: #FBF7EE;
+  --color-line: #E9DFC9;
+  --color-ink: #2B2620;
+  --color-muted: #6F665A;
+  --color-wa: #1FA855;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Cormorant Garamond", Georgia, serif;
+  --font-brand: "Quicksand", ui-sans-serif, sans-serif;
 }
 
-:root { color-scheme: dark; }
-body { background: #000; color: var(--color-cream); }
-.card { @apply bg-card rounded-2xl border border-white/10; }
-.btn { @apply inline-flex items-center justify-center gap-1 rounded-xl px-3 py-2 text-sm font-semibold transition active:scale-95 disabled:opacity-40; }
-.btn-send { @apply inline-flex items-center justify-center gap-1 rounded-xl px-3 py-2 text-sm font-semibold transition active:scale-95 disabled:opacity-40 bg-green-600 text-white hover:bg-green-700; }
-.btn-dark { @apply bg-cream text-ink hover:bg-white inline-flex items-center justify-center gap-1 rounded-xl px-3 py-2 text-sm font-semibold transition active:scale-95 disabled:opacity-40; }
-.btn-ghost { @apply text-cream inline-flex items-center justify-center gap-1 rounded-xl px-3 py-2 text-sm font-semibold transition active:scale-95 disabled:opacity-40 bg-white/5 hover:bg-white/10; }
-.input { @apply w-full rounded-xl border border-white/10 bg-white/5 text-cream placeholder:text-cream/30 px-3 py-2 text-sm outline-none focus:border-cream/50; }
-.label { @apply block text-xs font-semibold text-cream/60 mb-1; }
+:root { color-scheme: light; }
+body { background: var(--color-cream); color: var(--color-ink); -webkit-font-smoothing: antialiased; }
+h1, h2, h3, .titulo { font-family: var(--font-serif); font-weight: 600; letter-spacing: -0.01em; }
+.marca { font-family: var(--font-brand); font-weight: 500; background: linear-gradient(135deg, #9C7A2E, #D4B26A 45%, #A9852F); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+@layer components {
+.card { @apply bg-white rounded-[20px] border border-line shadow-[0_2px_14px_rgba(43,38,32,0.05)]; }
+.btn, .btn-send, .btn-gold, .btn-ghost, .btn-soft { @apply inline-flex items-center justify-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-semibold transition active:scale-[.97] disabled:opacity-40 disabled:pointer-events-none; }
+.btn-send { @apply bg-wa text-white hover:brightness-95 shadow-sm; }
+.btn-gold { @apply text-white shadow-sm hover:brightness-105; background: linear-gradient(135deg, #9C7A2E, #D4B26A); }
+.btn-ghost { @apply bg-white text-ink border border-line hover:bg-gold-soft/60; }
+.btn-soft { @apply bg-gold-soft/70 text-ink hover:bg-gold-soft; }
+.input { @apply w-full rounded-xl border border-line bg-white text-ink placeholder:text-muted/60 px-3 py-2.5 text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/15; }
+.label { @apply block text-xs font-semibold text-muted mb-1; }
+.chip { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold whitespace-nowrap border; }
+
+.aviso-esfriou { @apply bg-sky-50 text-sky-900 border-sky-200; }
+.aviso-sumida { @apply bg-violet-50 text-violet-900 border-violet-200; }
+.aviso-atentar { @apply bg-amber-50 text-amber-900 border-amber-200; }
+.aviso-manut { @apply bg-teal-50 text-teal-900 border-teal-200; }
+.aviso-plano { @apply bg-gold-soft/70 text-[#5c4718] border-gold-2/60; }
+.aviso-agendar { @apply bg-rose-50 text-rose-900 border-rose-200; }
+.aviso-retorno { @apply bg-orange-50 text-orange-900 border-orange-200; }
+.aviso-indicacao { @apply bg-emerald-50 text-emerald-900 border-emerald-200; }
+}
 
 @media print {
   .no-print { display: none !important; }
-  body { background: white; color: black; }
+  body { background: white; }
 }
-
-select { background-color: #1a1a1a; color: var(--color-cream); }
-select option, select optgroup { background-color: #1a1a1a; color: #fff1dc; }

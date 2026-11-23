@@ -7,20 +7,29 @@ import { seed, type State } from './data'
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
 const key = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
 export const supabase = url && key ? createClient(url, key) : null
-const LS = 'painel-da-cria-demo-v2'
+const LS = 'painel-ortoclin-demo-v1'
 
 function carregarLocal(): State {
   try { const r = localStorage.getItem(LS); if (r) return JSON.parse(r) } catch { /* sem storage */ }
   return seed()
 }
 
-type Ctx = { s: State; set: (fn: (s: State) => State) => void; reset: () => void; toast: (t: string) => void; aviso: string }
+export type Tela = 'chamar' | 'whats' | 'painel' | 'agenda' | 'sumidos' | 'resumo' | 'ajustes'
+export type PreAgendar = { contactId: string; serviceId?: string } | null
+type Ctx = {
+  s: State; set: (fn: (s: State) => State) => void; reset: () => void; toast: (t: string) => void; aviso: string
+  tela: Tela; setTela: (t: Tela) => void; pre: PreAgendar; irAgendar: (contactId: string, serviceId?: string) => void; limparPre: () => void
+}
+/** Modo demonstração: dados fictícios e WhatsApp sem avisos. Desligue com VITE_DEMO=false. */
+export const DEMO = import.meta.env.VITE_DEMO !== 'false'
 const C = createContext<Ctx>(null!)
 export const useApp = () => useContext(C)
 
 export function Provider({ children }: { children: ReactNode }) {
   const [s, setS] = useState<State>(carregarLocal)
   const [aviso, setAviso] = useState('')
+  const [tela, setTela] = useState<Tela>('chamar')
+  const [pre, setPre] = useState<PreAgendar>(null)
   const pronto = useRef(!supabase)
 
   useEffect(() => {
@@ -39,5 +48,5 @@ export function Provider({ children }: { children: ReactNode }) {
   }, [s])
 
   const toast = (t: string) => { setAviso(t); setTimeout(() => setAviso(''), 2600) }
-  return <C.Provider value={{ s, set: setS, reset: () => setS(seed()), toast, aviso }}>{children}</C.Provider>
+  return <C.Provider value={{ s, set: setS, reset: () => setS(seed()), toast, aviso, tela, setTela, pre, irAgendar: (contactId, serviceId) => { setPre({ contactId, serviceId }); setTela('agenda') }, limparPre: () => setPre(null) }}>{children}</C.Provider>
 }

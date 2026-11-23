@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import { Provider, useApp, supabase } from './store'
-import { brl, valorParado, chamarHoje } from './data'
-import { ConectarWhatsApp, useStatusWpp } from './whatsapp'
-import { ChamarHoje, WhatsApp, Painel, Agenda, Sumidos, Resumo, Ajustes } from './screens'
+import { Provider, useApp, supabase, DEMO, type Tela } from './store'
+import { brl, valorParado, chamarHoje, T } from './data'
+import { useStatusWpp } from './whatsapp'
+import { ChamarHoje, WhatsApp, Painel, Agenda, Sumidos, Resumo, Ajustes, Ajuda } from './screens'
 
 type Papel = 'dona' | 'recepcao'
-const TELAS = [
-  { id: 'chamar', nome: 'Chamar hoje', icone: '📣' },
+const TELAS: { id: Tela; nome: string; icone: string; soDona?: boolean }[] = [
+  { id: 'chamar', nome: 'Chamar hoje', icone: '☀️' },
   { id: 'whats', nome: 'WhatsApp', icone: '💬' },
   { id: 'painel', nome: 'Painel', icone: '🗂️' },
   { id: 'agenda', nome: 'Agenda', icone: '📅' },
@@ -20,113 +20,109 @@ export default function App() {
 }
 
 function Raiz() {
-  const [papel, setPapel] = useState<Papel | null>(() => (sessionStorage.getItem('papel') as Papel) || null)
-  if (!papel) return <Login onEntrar={p => { sessionStorage.setItem('papel', p); setPapel(p) }} />
-  return <Shell papel={papel} sair={() => { sessionStorage.removeItem('papel'); setPapel(null) }} />
+  const [papel, setPapel] = useState<Papel | null>(() => { try { return sessionStorage.getItem('papel') as Papel } catch { return null } })
+  const entrar = (p: Papel | null) => { try { if (p) sessionStorage.setItem('papel', p); else sessionStorage.removeItem('papel') } catch { /* sem storage */ } setPapel(p) }
+  if (!papel) return <Login onEntrar={entrar} />
+  return <Shell papel={papel} sair={() => entrar(null)} />
+}
+
+export function Marca({ grande = false }: { grande?: boolean }) {
+  const { s } = useApp()
+  return (
+    <div className={`flex items-center ${grande ? 'flex-col gap-3 text-center' : 'gap-2.5'}`}>
+      <img src="/ortoclin-mark.png" alt="" className={grande ? 'h-20' : 'h-10'} />
+      <div className="leading-tight">
+        <p className={`marca ${grande ? 'text-4xl' : 'text-2xl'}`}>{s.clinica.nome}</p>
+        <p className={`text-muted ${grande ? 'text-sm' : 'text-[10px]'} tracking-[.08em] uppercase`}>{s.clinica.subtitulo}</p>
+      </div>
+    </div>
+  )
 }
 
 function Login({ onEntrar }: { onEntrar: (p: Papel) => void }) {
-  const [wpp, setWpp] = useState(false)
   return (
-    <div className="min-h-dvh bg-black text-cream flex flex-col items-center justify-center p-6 gap-6">
-      <img src="/logo-vertical.png" alt="Cria" className="w-44 -my-6" />
-      <div className="text-center">
-        <h1 className="text-2xl font-extrabold">Painel da Cria</h1>
-        <p className="text-cream/60 text-sm mt-1">Demonstração · Clínica Elizabeth</p>
-      </div>
-      {wpp ? (
-        <div className="w-full max-w-xs space-y-3">
-          <p className="text-center font-bold">Entrar com o WhatsApp da clínica</p>
-          <ConectarWhatsApp escuro onConectado={() => onEntrar('dona')} />
-          <button className="text-sm text-cream/60 underline w-full" onClick={() => setWpp(false)}>Voltar</button>
+    <div className="min-h-dvh flex items-center justify-center p-5 bg-[linear-gradient(160deg,#F6EBD0,#FBF7EE_45%,#fff)]">
+      <div className="card w-full max-w-sm p-7 space-y-6">
+        <Marca grande />
+        <div className="space-y-3">
+          <div><label className="label">E-mail</label><input className="input" defaultValue="elizabeth@ortoclin.com.br" /></div>
+          <div><label className="label">Senha</label><input className="input" type="password" defaultValue="demonstracao" /></div>
+          <button className="btn-gold w-full py-3" onClick={() => onEntrar('dona')}>Entrar como Dra. Elizabeth</button>
+          <button className="btn-ghost w-full py-3" onClick={() => onEntrar('recepcao')}>Entrar como recepção</button>
         </div>
-      ) : (
-      <div className="w-full max-w-xs space-y-3">
-        <button className="btn w-full bg-green-600 text-white py-3" onClick={() => setWpp(true)}>Entrar com WhatsApp</button>
-        <p className="text-center text-xs text-cream/40">ou</p>
-        <input className="input bg-white/5 border-white/10 text-cream" defaultValue="elizabeth@clinica.com.br" />
-        <input className="input bg-white/5 border-white/10 text-cream" type="password" defaultValue="demonstracao" />
-        <button className="btn w-full bg-cream text-ink py-3" onClick={() => onEntrar('dona')}>Entrar como dona</button>
-        <button className="btn w-full bg-white/10 text-cream py-3" onClick={() => onEntrar('recepcao')}>Entrar como recepção</button>
+        {DEMO && <p className="text-center text-xs text-muted">Demonstração com pacientes fictícios</p>}
       </div>
-      )}
     </div>
   )
 }
 
 function Shell({ papel, sair }: { papel: Papel; sair: () => void }) {
-  const { s, aviso, toast } = useApp()
-  const [tela, setTela] = useState('chamar')
+  const { s, aviso, toast, tela, setTela } = useApp()
   const telas = TELAS.filter(t => !t.soDona || papel === 'dona')
-  const { st: wpp } = useStatusWpp()
+  const { st: wpp } = useStatusWpp(DEMO ? 0 : 60000)
+  const wppCaiu = !DEMO && wpp?.configurado && wpp.estado !== 'open'
   const pendentes = chamarHoje(s).length
-  const novos = s.contacts.filter(c => c.novo).length
-  const badge = (id: string) => (id === 'chamar' ? pendentes : id === 'whats' ? novos : 0)
+  const novos = s.contacts.filter(c => c.tagId === T.novo).length
+  const badge = (id: Tela) => (id === 'chamar' ? pendentes : id === 'whats' ? novos : 0)
   const diasAtivo = Math.round((Date.now() - new Date(s.clinica.ativacao + 'T12:00:00').getTime()) / 86400000)
+  const atual = tela === 'ajustes' && papel !== 'dona' ? 'chamar' : tela
 
   const corpo = {
     chamar: <ChamarHoje />, whats: <WhatsApp />, painel: <Painel />, agenda: <Agenda />,
-    sumidos: <Sumidos />, resumo: <Resumo />, ajustes: papel === 'dona' ? <Ajustes /> : null,
-  }[tela]
+    sumidos: <Sumidos />, resumo: <Resumo />, ajustes: <Ajustes />,
+  }[atual]
+
+  const Ponto = ({ id }: { id: Tela }) => (id === 'whats' && wppCaiu ? <span title="WhatsApp desconectado" className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-white" /> : null)
 
   return (
     <div className="min-h-dvh md:flex">
-      {/* menu lateral (computador) */}
-      <aside className="no-print hidden md:flex w-56 shrink-0 bg-ink text-cream border-r border-white/10 flex-col p-3 gap-1 sticky top-0 h-dvh">
-        <img src="/logo.png" alt="Cria" className="h-20 object-cover object-center -mx-2 mb-2" />
+      <aside className="no-print hidden md:flex w-60 shrink-0 bg-white border-r border-line flex-col p-4 gap-1 sticky top-0 h-dvh">
+        <div className="px-2 pt-1 pb-5"><Marca /></div>
         {telas.map(t => (
           <button key={t.id} onClick={() => setTela(t.id)}
-            className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-left ${tela === t.id ? 'bg-cream text-ink' : 'hover:bg-white/10'}`}>
-            <span>{t.icone}</span><span className="flex-1">{t.nome}</span>
-            {badge(t.id) > 0 && <span className="rounded-full bg-green-600 text-white text-xs px-2">{badge(t.id)}</span>}
+            className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-left transition ${atual === t.id ? 'bg-gold-soft text-ink font-semibold shadow-[inset_3px_0_0_#B8913F]' : 'text-muted hover:bg-cream hover:text-ink'}`}>
+            <span className="relative">{t.icone}<Ponto id={t.id} /></span><span className="flex-1">{t.nome}</span>
+            {badge(t.id) > 0 && <span className="rounded-full bg-gold text-white text-[11px] font-bold px-2 py-0.5">{badge(t.id)}</span>}
           </button>
         ))}
-        <div className="mt-auto text-xs text-cream/50 px-3 space-y-1">
-          <p>{papel === 'dona' ? 'Elizabeth (dona)' : 'Recepção'}</p>
-          <p>{supabase ? 'Salvo no Supabase' : 'Salvo neste navegador'}</p>
-          <button className="underline" onClick={sair}>Sair</button>
+        <div className="mt-auto px-3 space-y-1 text-xs text-muted">
+          <p className="font-medium text-ink">{papel === 'dona' ? 'Dra. Elizabeth' : 'Recepção'}</p>
+          {!DEMO && <p>{supabase ? 'Salvo no Supabase' : 'Salvo neste navegador'}</p>}
+          <button className="underline hover:text-ink" onClick={sair}>Sair</button>
+          <p className="pt-3 text-[10px] text-muted/70">Feito pela Cria</p>
         </div>
       </aside>
 
       <div className="flex-1 min-w-0 flex flex-col">
-        {/* topo com valor parado */}
-        <header className="no-print sticky top-0 z-20 bg-black/85 backdrop-blur border-b border-white/10 px-4 py-3 flex items-center gap-3">
-          <img src="/favicon.svg" alt="" className="w-9 h-9 md:hidden" />
+        <header className="no-print sticky top-0 z-20 bg-cream/90 backdrop-blur border-b border-line px-4 md:px-6 py-3 flex items-center gap-3">
+          <img src="/ortoclin-mark.png" alt="" className="h-9 md:hidden" />
           <div className="min-w-0">
-            <p className="text-xs text-cream/50 font-semibold">{s.clinica.nome}</p>
-            <p className="font-extrabold text-lg leading-tight">{TELAS.find(t => t.id === tela)?.nome}</p>
+            <p className="text-[11px] text-muted font-medium uppercase tracking-wider">{s.clinica.nome}</p>
+            <h1 className="text-2xl leading-tight">{TELAS.find(t => t.id === atual)?.nome}</h1>
           </div>
           <div className="ml-auto text-right">
-            <p className="text-[11px] uppercase tracking-wide text-cream/50 font-bold">Dinheiro parado</p>
-            <p className="text-2xl md:text-3xl font-extrabold text-amber-400 leading-none">{brl(valorParado(s))}</p>
+            <p className="text-[11px] uppercase tracking-wider text-muted font-semibold flex items-center justify-end gap-1">Parado <Ajuda texto="Parado é a soma dos orçamentos em dúvida mais o que falta dos planos que fecharam só uma parte." /></p>
+            <p className="font-serif font-semibold text-3xl md:text-4xl leading-none text-gold">{brl(valorParado(s))}</p>
           </div>
-          <button className="md:hidden text-xs text-cream/50 underline" onClick={sair}>Sair</button>
+          <button className="md:hidden text-xs text-muted underline" onClick={sair}>Sair</button>
         </header>
-
-        {wpp?.configurado && wpp.estado !== 'open' && (
-          <button onClick={() => papel === 'dona' && setTela('ajustes')} className="no-print bg-red-600 text-white text-sm font-semibold px-4 py-2 text-left">
-            ⚠️ WhatsApp desconectado. {papel === 'dona' ? 'Toque para conectar em Ajustes.' : 'Avise a dona.'}
-          </button>
-        )}
-        <main className={`flex-1 p-4 pb-28 md:pb-6 w-full mx-auto ${tela === 'painel' ? 'max-w-none' : 'max-w-6xl'}`}>{corpo}</main>
+        <main className={`flex-1 p-4 md:p-6 pb-28 md:pb-8 w-full mx-auto ${atual === 'painel' ? 'max-w-none' : 'max-w-6xl'}`}>{corpo}</main>
       </div>
 
-      {/* menu de baixo (celular) */}
-      <nav className="no-print md:hidden fixed bottom-0 inset-x-0 z-30 bg-ink text-cream border-t border-white/10 flex overflow-x-auto">
+      <nav className="no-print md:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-line flex overflow-x-auto shadow-[0_-4px_16px_rgba(43,38,32,0.05)]">
         {telas.map(t => (
           <button key={t.id} onClick={() => setTela(t.id)}
-            className={`relative flex-1 min-w-16 py-2 flex flex-col items-center text-[10px] font-semibold ${tela === t.id ? 'text-cream' : 'text-cream/50'}`}>
-            <span className="text-lg">{t.icone}</span>{t.nome}
-            {badge(t.id) > 0 && <span className="absolute top-1 right-3 rounded-full bg-green-600 text-white text-[10px] px-1.5">{badge(t.id)}</span>}
+            className={`relative flex-1 min-w-0 py-2 flex flex-col items-center gap-0.5 text-[9.5px] leading-tight font-semibold whitespace-nowrap ${atual === t.id ? 'text-gold' : 'text-muted'}`}>
+            <span className="relative text-lg">{t.icone}<Ponto id={t.id} /></span>{t.nome}
+            {badge(t.id) > 0 && <span className="absolute top-0.5 right-1 rounded-full bg-gold text-white text-[10px] px-1.5">{badge(t.id)}</span>}
           </button>
         ))}
       </nav>
 
       {diasAtivo <= 7 && (
-        <button onClick={() => toast('Na versão real, abre o WhatsApp do Lucas')}
-          className="no-print fixed right-4 bottom-20 md:bottom-6 z-30 btn-dark shadow-lg rounded-full">🙋 Falar com o Lucas</button>
+        <button onClick={() => toast('Abre o WhatsApp do Lucas, da Cria')} className="no-print fixed right-4 bottom-20 md:bottom-6 z-30 btn-ghost shadow-lg rounded-full">🙋 Falar com o Lucas</button>
       )}
-      {aviso && <div className="fixed left-1/2 -translate-x-1/2 bottom-24 md:bottom-8 z-50 bg-cream text-ink font-semibold rounded-xl px-4 py-2 text-sm shadow-lg">{aviso}</div>}
+      {aviso && <div className="fixed left-1/2 -translate-x-1/2 bottom-24 md:bottom-8 z-50 bg-ink text-white rounded-xl px-4 py-2.5 text-sm shadow-lg max-w-[90vw]">{aviso}</div>}
     </div>
   )
 }

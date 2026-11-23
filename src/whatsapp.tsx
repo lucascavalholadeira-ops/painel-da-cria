@@ -12,18 +12,21 @@ const api = async (action: string, post = false, extra = '') => {
   return r.json()
 }
 
-/** Status da conexão, consultado a cada `intervalo` ms. */
+/** Status da conexão, consultado a cada `intervalo` ms (0 = não consulta). */
 export function useStatusWpp(intervalo = 30000) {
   const [st, setSt] = useState<StatusWpp | null>(null)
-  const atualizar = useCallback(() => api('status').then(setSt).catch(() => setSt(null)), [])
-  useEffect(() => { atualizar(); const t = setInterval(atualizar, intervalo); return () => clearInterval(t) }, [atualizar, intervalo])
+  const atualizar = useCallback(() => api('status').then(setSt).catch(() => setSt({ configurado: false })), [])
+  useEffect(() => {
+    if (!intervalo) return
+    atualizar(); const t = setInterval(atualizar, intervalo); return () => clearInterval(t)
+  }, [atualizar, intervalo])
   return { st, atualizar }
 }
 
 const fmtNumero = (n?: string | null) => (n ? n.replace(/^(\d{2})(\d{2})(\d{4,5})(\d{4})$/, '+$1 $2 $3-$4') : '')
 
 /** Conecta o WhatsApp da clínica por QR code (ou código de pareamento no celular). */
-export function ConectarWhatsApp({ onConectado, escuro = false }: { onConectado?: (s: StatusWpp) => void; escuro?: boolean }) {
+export function ConectarWhatsApp() {
   const { st, atualizar } = useStatusWpp(3000)
   const [qr, setQr] = useState<string | null>(null)
   const [codigo, setCodigo] = useState<string | null>(null)
@@ -32,7 +35,7 @@ export function ConectarWhatsApp({ onConectado, escuro = false }: { onConectado?
   const [erro, setErro] = useState('')
   const conectado = st?.estado === 'open'
 
-  useEffect(() => { if (conectado && st) { setQr(null); setCodigo(null); onConectado?.(st) } }, [conectado]) // eslint-disable-line
+  useEffect(() => { if (conectado) { setQr(null); setCodigo(null) } }, [conectado])
 
   async function gerar(comNumero = false) {
     setCarregando(true); setErro('')
@@ -49,54 +52,48 @@ export function ConectarWhatsApp({ onConectado, escuro = false }: { onConectado?
   // O QR do WhatsApp expira em ~40s: renova enquanto estiver na tela.
   useEffect(() => { if (!qr || conectado) return; const t = setTimeout(() => gerar(), 35000); return () => clearTimeout(t) }, [qr, conectado]) // eslint-disable-line
 
-  const sub = escuro ? 'text-cream/60' : 'text-cream/60'
-  if (!st) return <p className={`text-sm ${sub}`}>Verificando WhatsApp…</p>
-  if (st.erro) return <p className="text-sm text-red-500 font-semibold">{st.erro}. Tente de novo em instantes.</p>
-  if (!st.configurado) return <p className={`text-sm ${sub}`}>WhatsApp não configurado nesta instalação (falta EVOLUTION_API_URL e EVOLUTION_API_KEY).</p>
+  if (!st) return <p className="text-sm text-muted">Verificando WhatsApp…</p>
+  if (st.erro) return <p className="text-sm text-red-700 font-medium">{st.erro}. Tente de novo em instantes.</p>
+  if (!st.configurado) return <p className="text-sm text-muted">WhatsApp não configurado nesta instalação.</p>
 
   if (conectado) return (
-    <div className="flex items-center gap-3">
-      {st.perfil?.foto ? <img src={st.perfil.foto} className="w-12 h-12 rounded-full" alt="" /> : <div className="w-12 h-12 rounded-full bg-green-600 text-white flex items-center justify-center text-xl">✓</div>}
-      <div className="flex-1 min-w-0">
-        <p className="font-bold">WhatsApp conectado</p>
-        <p className={`text-sm ${sub}`}>{st.perfil?.nome} {fmtNumero(st.perfil?.numero)}</p>
-      </div>
+    <div className="flex items-center gap-3 rounded-2xl bg-green-50 border border-green-200 p-3">
+      {st.perfil?.foto ? <img src={st.perfil.foto} className="w-11 h-11 rounded-full" alt="" /> : <div className="w-11 h-11 rounded-full bg-wa text-white flex items-center justify-center text-lg">✓</div>}
+      <div className="min-w-0"><p className="font-semibold text-green-900">WhatsApp conectado</p><p className="text-sm text-green-900/70">{st.perfil?.nome} {fmtNumero(st.perfil?.numero)}</p></div>
     </div>
   )
 
   return (
     <div className="space-y-3">
+      <p className="text-sm rounded-xl bg-amber-50 border border-amber-200 text-amber-900 px-3 py-2">WhatsApp desconectado. Conecte o número da clínica abaixo.</p>
       {qr ? (
         <div className="space-y-2">
-          <img src={qr} alt="QR code do WhatsApp" className="w-56 h-56 bg-card rounded-2xl p-2 mx-auto" />
-          <p className={`text-xs text-center ${sub}`}>No celular da clínica: WhatsApp › Aparelhos conectados › Conectar aparelho › aponte para o código.</p>
+          <img src={qr} alt="QR code do WhatsApp" className="w-56 h-56 bg-white rounded-2xl p-2 mx-auto border border-line" />
+          <p className="text-xs text-center text-muted">No celular da clínica: WhatsApp › Aparelhos conectados › Conectar aparelho › aponte para o código.</p>
         </div>
       ) : codigo ? (
         <div className="text-center space-y-2">
-          <p className="text-3xl font-extrabold tracking-[.3em]">{codigo}</p>
-          <p className={`text-xs ${sub}`}>WhatsApp › Aparelhos conectados › Conectar aparelho › Conectar com número de telefone › digite este código.</p>
+          <p className="text-3xl font-bold tracking-[.3em]">{codigo}</p>
+          <p className="text-xs text-muted">WhatsApp › Aparelhos conectados › Conectar aparelho › Conectar com número de telefone › digite este código.</p>
         </div>
       ) : null}
-      <button className={`btn w-full py-3 bg-cream text-ink`} disabled={carregando} onClick={() => gerar()}>
-        {carregando ? 'Gerando…' : qr ? 'Gerar outro QR code' : 'Mostrar QR code'}
-      </button>
-      <details className={`text-xs ${sub}`}>
+      <button className="btn-gold w-full py-3" disabled={carregando} onClick={() => gerar()}>{carregando ? 'Gerando…' : qr ? 'Gerar outro QR code' : 'Mostrar QR code'}</button>
+      <details className="text-xs text-muted">
         <summary className="cursor-pointer">Está no celular? Conectar com código</summary>
         <div className="flex gap-2 mt-2">
-          <input className={`input ${escuro ? 'bg-white/5 border-white/10 text-cream' : ''}`} placeholder="DDD + número, ex.: 11999998888" inputMode="tel" value={numero} onChange={e => setNumero(e.target.value)} />
-          <button className="btn-send" disabled={numero.replace(/\D/g, '').length < 10 || carregando}
-            onClick={() => gerar(true)}>Gerar</button>
+          <input className="input" placeholder="DDD + número, ex.: 96999998888" inputMode="tel" value={numero} onChange={e => setNumero(e.target.value)} />
+          <button className="btn-send" disabled={numero.replace(/\D/g, '').length < 10 || carregando} onClick={() => gerar(true)}>Gerar</button>
         </div>
       </details>
-      {erro && <p className="text-sm text-red-500 font-semibold">{erro}</p>}
+      {erro && <p className="text-sm text-red-700 font-medium">{erro}</p>}
     </div>
   )
 }
 
-export function Desconectar({ depois }: { depois?: () => void }) {
+export function Desconectar() {
   const [ok, setOk] = useState(false)
-  return <button className="btn-ghost text-red-400" disabled={ok} onClick={async () => {
+  return <button className="btn-ghost text-red-700" disabled={ok} onClick={async () => {
     if (!confirm('Desconectar o WhatsApp da clínica?')) return
-    setOk(true); await api('sair', true); depois?.(); location.reload()
+    setOk(true); await api('sair', true); location.reload()
   }}>Desconectar WhatsApp</button>
 }
