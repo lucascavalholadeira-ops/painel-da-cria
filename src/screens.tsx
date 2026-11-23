@@ -34,8 +34,8 @@ const Vazio = ({ children }: { children: ReactNode }) => (
 
 function Modal({ titulo, fechar, children }: { titulo: string; fechar: () => void; children: ReactNode }) {
   return (
-    <div className="fixed inset-0 z-40 bg-black/40 flex items-end md:items-center justify-center" onClick={fechar}>
-      <div className="bg-card w-full md:max-w-md rounded-t-3xl md:rounded-3xl p-5 max-h-[90dvh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm flex items-end md:items-center justify-center" onClick={fechar}>
+      <div className="bg-card border border-white/10 w-full md:max-w-md rounded-t-3xl md:rounded-3xl p-5 max-h-[90dvh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center mb-4"><h2 className="font-extrabold text-lg flex-1">{titulo}</h2><button onClick={fechar} className="text-2xl leading-none text-cream/40">×</button></div>
         {children}
       </div>
@@ -119,15 +119,21 @@ export function WhatsApp() {
     quotes: st.quotes.map(q => (q.contactId === c.id ? { ...q, ultimoContato: hoje() } : q)),
   }))
 
-  const menuEtiqueta = (cid: string) => menu === cid && (
-    <div className="absolute z-30 right-0 top-7 bg-card card p-1 w-56 shadow-xl" onClick={e => e.stopPropagation()}>
-      {s.tags.map(t => (
-        <button key={t.id} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5 text-sm text-left"
-          onClick={() => { set(st => aplicarEtiqueta(st, cid, t.id)); setMenu(null); if (t.painel) toast(`Foi para o Painel em "Para organizar"`) }}>
-          <span className="w-3 h-3 rounded-full" style={{ background: t.cor }} />{t.nome}{t.painel && <span className="ml-auto text-[10px] text-cream/40">→ Painel</span>}
-        </button>
-      ))}
-    </div>
+  const quem = s.contacts.find(x => x.id === menu)
+  const janelaEtiqueta = quem && (
+    <Modal titulo={`Etiqueta de ${quem.nome.split(' ')[0]}`} fechar={() => setMenu(null)}>
+      <div className="space-y-1">
+        {s.tags.map(t => (
+          <button key={t.id} className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left ${quem.tagId === t.id ? 'bg-white/10' : 'hover:bg-white/5'}`}
+            onClick={() => { set(st => aplicarEtiqueta(st, quem.id, t.id)); setMenu(null); if (t.painel) toast('Foi para o Painel em "Para organizar"') }}>
+            <span className="w-3.5 h-3.5 rounded-full shrink-0" style={{ background: t.cor }} />
+            <span className="flex-1 font-semibold">{t.nome}</span>
+            {t.painel && <span className="text-xs text-cream/40">vai para o Painel</span>}
+            {quem.tagId === t.id && <span>✓</span>}
+          </button>
+        ))}
+      </div>
+    </Modal>
   )
 
   return (
@@ -153,9 +159,9 @@ export function WhatsApp() {
                 </div>
                 <div className="flex items-center gap-2">
                   <p className="text-sm text-cream/50 truncate flex-1">{ult?.dir === 'out' && '✓✓ '}{ult?.texto}</p>
-                  <div className="relative" onClick={e => { e.stopPropagation(); setMenu(menu === c.id ? null : c.id) }}>
+                  <div onClick={e => { e.stopPropagation(); setMenu(c.id) }}>
                     <button><Etiqueta s={s} tagId={c.tagId} /></button>
-                    {menuEtiqueta(c.id)}
+                    
                   </div>
                 </div>
               </div>
@@ -175,7 +181,7 @@ export function WhatsApp() {
           </div>
           {lado ? (
             <div className="p-4 space-y-3 overflow-y-auto text-sm">
-              <div><p className="label">Etiqueta</p><div className="relative inline-block" onClick={e => { e.stopPropagation(); setMenu(menu === c.id ? null : c.id) }}><button><Etiqueta s={s} tagId={c.tagId} /></button>{menuEtiqueta(c.id)}</div></div>
+              <div><p className="label">Etiqueta</p><div className="inline-block" onClick={e => { e.stopPropagation(); setMenu(c.id) }}><button><Etiqueta s={s} tagId={c.tagId} /></button></div></div>
               <div><p className="label">No painel</p>{card ? <p>{COLUNAS.find(x => x.id === card.coluna)?.nome} · {s.services.find(x => x.id === card.serviceId)?.nome} · <b>{brl(card.total)}</b></p> : <p className="text-cream/40">Sem card</p>}</div>
               <div><p className="label">Algo a se atentar</p>
                 <input className="input" value={c.atentar} placeholder="Ex.: tem medo de agulha" onChange={e => set(st => ({ ...st, contacts: st.contacts.map(x => (x.id === c.id ? { ...x, atentar: e.target.value } : x)) }))} /></div>
@@ -202,6 +208,7 @@ export function WhatsApp() {
       ) : (
         <div className="hidden md:flex items-center justify-center text-cream/40 flex-col gap-2"><span className="text-4xl">💬</span>Escolha uma conversa</div>
       )}
+      {janelaEtiqueta}
     </div>
   )
 }
