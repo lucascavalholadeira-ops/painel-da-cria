@@ -1,5 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { useApp } from './store'
+import { ConectarWhatsApp, Desconectar, useStatusWpp } from './whatsapp'
 import {
   COLUNAS, addDias, brl, chamarHoje, diasDesde, esfriou, fmtDia, hhmm, hm, hoje, mensagem, sumidos, uid, valorParado,
   type Appt, type Coluna, type Quote, type State, type StatusConsulta,
@@ -583,12 +584,19 @@ export function Ajustes() {
         <button className="btn-ghost text-red-600" onClick={() => { if (confirm('Voltar aos dados de exemplo?')) { reset(); toast('Demonstração reiniciada') } }}>Reiniciar demonstração</button>
       </div>}
 
-      {aba === 'whats' && <div className="card p-4 space-y-3 max-w-md">
-        <p className="font-bold">WhatsApp da clínica</p>
-        <p className="text-sm text-black/60">Na demonstração o WhatsApp fica desligado. Na versão da clínica, aqui aparece o QR code para conectar o número que ela já usa.</p>
-        <div className="w-40 h-40 rounded-2xl bg-black/5 flex items-center justify-center text-black/30 text-sm text-center p-4">QR code aparece aqui</div>
-        <p className="text-xs text-black/50">Proteção do número: até 40 mensagens por dia, intervalo de 20 a 60s entre envios, só das 8h às 20h, nada de envio em massa.</p>
-      </div>}
+      {aba === 'whats' && <WhatsAppAjustes />}
+    </div>
+  )
+}
+
+function WhatsAppAjustes() {
+  const { st } = useStatusWpp(5000)
+  return (
+    <div className="card p-4 space-y-4 max-w-md">
+      <p className="font-bold">WhatsApp da clínica</p>
+      <ConectarWhatsApp />
+      {st?.estado === 'open' && <Desconectar />}
+      <p className="text-xs text-black/50">Proteção do número: até 40 mensagens por dia, intervalo de 20 a 60s entre envios, só das 8h às 20h, nada de envio em massa.</p>
     </div>
   )
 }

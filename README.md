@@ -11,6 +11,23 @@ npm run dev
 ## Publicar na Vercel
 Importe o repositório na Vercel (detecta Vite sozinho). Nenhuma variável é obrigatória.
 
+## WhatsApp (Evolution API)
+Na Vercel, em Settings > Environment Variables, adicione:
+
+| Variável | Exemplo |
+|---|---|
+| `EVOLUTION_API_URL` | `https://evolutionapi.lamarka.net` |
+| `EVOLUTION_API_KEY` | chave da Evolution |
+| `EVOLUTION_INSTANCE` | `painel-da-cria-demo` (uma por clínica) |
+
+A chave fica só na função de servidor `api/evolution.ts` e nunca vai para o navegador. A função só mexe na instância de `EVOLUTION_INSTANCE`.
+
+- **Login:** "Entrar com WhatsApp" mostra o QR code; quando o celular conecta, entra como dona.
+- **Ajustes > WhatsApp:** status, número conectado, QR para reconectar e botão para desconectar.
+- **Faixa vermelha no topo** quando o WhatsApp cai.
+
+Localmente, `npm run dev` já roda a função (lê o `.env`).
+
 ## Supabase (opcional)
 1. Crie um projeto no Supabase e rode `supabase/schema.sql` no SQL Editor.
 2. Na Vercel, adicione `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`.

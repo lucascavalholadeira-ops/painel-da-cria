@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Provider, useApp, supabase } from './store'
 import { brl, valorParado, chamarHoje } from './data'
+import { ConectarWhatsApp, useStatusWpp } from './whatsapp'
 import { ChamarHoje, WhatsApp, Painel, Agenda, Sumidos, Resumo, Ajustes } from './screens'
 
 type Papel = 'dona' | 'recepcao'
@@ -25,6 +26,7 @@ function Raiz() {
 }
 
 function Login({ onEntrar }: { onEntrar: (p: Papel) => void }) {
+  const [wpp, setWpp] = useState(false)
   return (
     <div className="min-h-dvh bg-ink text-cream flex flex-col items-center justify-center p-6 gap-6">
       <img src="/logo-vertical.png" alt="Cria" className="w-44 -my-6" />
@@ -32,12 +34,22 @@ function Login({ onEntrar }: { onEntrar: (p: Papel) => void }) {
         <h1 className="text-2xl font-extrabold">Painel da Cria</h1>
         <p className="text-cream/60 text-sm mt-1">Demonstração · Clínica Elizabeth</p>
       </div>
+      {wpp ? (
+        <div className="w-full max-w-xs space-y-3">
+          <p className="text-center font-bold">Entrar com o WhatsApp da clínica</p>
+          <ConectarWhatsApp escuro onConectado={() => onEntrar('dona')} />
+          <button className="text-sm text-cream/60 underline w-full" onClick={() => setWpp(false)}>Voltar</button>
+        </div>
+      ) : (
       <div className="w-full max-w-xs space-y-3">
+        <button className="btn w-full bg-green-600 text-white py-3" onClick={() => setWpp(true)}>Entrar com WhatsApp</button>
+        <p className="text-center text-xs text-cream/40">ou</p>
         <input className="input bg-white/5 border-white/10 text-cream" defaultValue="elizabeth@clinica.com.br" />
         <input className="input bg-white/5 border-white/10 text-cream" type="password" defaultValue="demonstracao" />
         <button className="btn w-full bg-cream text-ink py-3" onClick={() => onEntrar('dona')}>Entrar como dona</button>
         <button className="btn w-full bg-white/10 text-cream py-3" onClick={() => onEntrar('recepcao')}>Entrar como recepção</button>
       </div>
+      )}
       <img src="/mascote.webp" alt="" className="w-28 opacity-90" />
     </div>
   )
@@ -47,6 +59,7 @@ function Shell({ papel, sair }: { papel: Papel; sair: () => void }) {
   const { s, aviso, toast } = useApp()
   const [tela, setTela] = useState('chamar')
   const telas = TELAS.filter(t => !t.soDona || papel === 'dona')
+  const { st: wpp } = useStatusWpp()
   const pendentes = chamarHoje(s).length
   const novos = s.contacts.filter(c => c.novo).length
   const badge = (id: string) => (id === 'chamar' ? pendentes : id === 'whats' ? novos : 0)
@@ -91,6 +104,11 @@ function Shell({ papel, sair }: { papel: Papel; sair: () => void }) {
           <button className="md:hidden text-xs text-black/50 underline" onClick={sair}>Sair</button>
         </header>
 
+        {wpp?.configurado && wpp.estado !== 'open' && (
+          <button onClick={() => papel === 'dona' && setTela('ajustes')} className="no-print bg-red-600 text-white text-sm font-semibold px-4 py-2 text-left">
+            ⚠️ WhatsApp desconectado. {papel === 'dona' ? 'Toque para conectar em Ajustes.' : 'Avise a dona.'}
+          </button>
+        )}
         <main className="flex-1 p-4 pb-28 md:pb-6 max-w-6xl w-full mx-auto">{corpo}</main>
       </div>
 
