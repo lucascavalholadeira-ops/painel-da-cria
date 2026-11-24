@@ -1,7 +1,7 @@
 // Função de servidor (Vercel) que fala com a Evolution API.
 // A chave fica só aqui, nunca no navegador, e só a instância da demo é acessível.
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { autorizado, lerCorpo } from './_auth'
+import { autorizado, lerCorpo } from './_auth.js'
 
 const BASE = (process.env.EVOLUTION_API_URL || '').replace(/\/$/, '')
 const KEY = process.env.EVOLUTION_API_KEY || ''

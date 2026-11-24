@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { autorizado, cookieLogin, cookieSair, exigeSenha, lerCorpo, senhaConfere } from './_auth'
+import { autorizado, cookieLogin, cookieSair, exigeSenha, lerCorpo, senhaConfere } from './_auth.js'
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
   const send = (code: number, obj: unknown, cookie?: string) => {
