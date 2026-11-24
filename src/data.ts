@@ -55,6 +55,8 @@ export const uid = () => Math.random().toString(36).slice(2, 10)
 export const hm = (h: string) => { const [a, b] = h.split(':').map(Number); return a * 60 + (b || 0) }
 export const hhmm = (m: number) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`
 export const primeiroNome = (n: string) => n.split(' ')[0]
+/** Telefone para mostrar na tela (contatos @lid não mostram o número). */
+export const foneVisivel = (f: string) => (f.includes('@') ? 'número oculto pelo WhatsApp' : f)
 
 export const COLUNAS: { id: Coluna; nome: string; cor: string }[] = [
   { id: 'para_organizar', nome: 'Para organizar', cor: '#A89F92' },
@@ -218,7 +220,8 @@ export function receberMensagem(s: State, nome: string, fone: string, texto: str
 
 // ---------- conversas reais (Evolution) ----------
 export interface ConversaReal { fone: string; nome: string | null; foto: string | null; ts: number; ultima: { texto: string; deMim: boolean; ts: number } | null }
-const so = (f: string) => f.replace(/\D/g, '')
+/** Chave de comparação: dígitos do telefone, ou o código @lid inteiro. */
+const so = (f: string) => (f.includes('@') ? f : f.replace(/\D/g, ''))
 
 /** Junta as conversas do WhatsApp com os contatos do painel. Quem é novo entra com etiqueta Novo
  *  (origem Site se escreveu "Vim pelo site…"); quem mandou mensagem nova conta como resposta. */
@@ -232,13 +235,13 @@ export function sincronizarConversas(s: State, conversas: ConversaReal[]): State
     const u = cv.ultima
     if (!atual) {
       const site = !!u && !u.deMim && /^\s*vim pelo site/i.test(u.texto)
-      contacts = [...contacts, { id: 'w' + cv.fone, nome: cv.nome || '+' + cv.fone, fone: '+' + cv.fone, tagId: T.novo, atentar: '', origem: site ? 'Site' : 'Outro', real: true, foto: cv.foto, ultima: u ?? undefined }]
+      contacts = [...contacts, { id: 'w' + cv.fone, nome: cv.nome || (cv.fone.includes('@') ? 'Contato do WhatsApp' : '+' + cv.fone), fone: cv.fone.includes('@') ? cv.fone : '+' + cv.fone, tagId: T.novo, atentar: '', origem: site ? 'Site' : 'Outro', real: true, foto: cv.foto, ultima: u ?? undefined }]
       mudou = true
       continue
     }
     if (u && (!atual.ultima || u.ts > atual.ultima.ts || !atual.real)) {
       const respondeu = !u.deMim && (atual.ultima ? u.ts > atual.ultima.ts : Date.now() - u.ts < 86400000)
-      contacts = contacts.map((c, j) => (j === i ? { ...c, real: true, foto: cv.foto ?? c.foto, ultima: u } : c))
+      contacts = contacts.map((c, j) => (j === i ? { ...c, real: true, foto: cv.foto ?? c.foto, ultima: u, nome: c.nome === 'Contato do WhatsApp' && cv.nome ? cv.nome : c.nome } : c))
       if (respondeu) {
         if (!envios.some(e => e.contactId === atual.id && e.dia === d && e.motivo === 'respondeu')) envios = [...envios, { contactId: atual.id, dia: d, motivo: 'respondeu' }]
         quotes = quotes.map(q => (q.contactId === atual.id ? { ...q, ultimoContato: d } : q))

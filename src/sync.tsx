@@ -36,7 +36,7 @@ export function useMensagensReais(fone: string | null) {
     setMsgs(null)
     if (!fone) return
     let vivo = true
-    const puxar = () => fetch(`/api/evolution?action=mensagens&fone=${fone.replace(/\D/g, '')}`).then(r => r.json())
+    const puxar = () => fetch(`/api/evolution?action=mensagens&fone=${encodeURIComponent(fone.includes('@') ? fone : fone.replace(/\D/g, ''))}`).then(r => r.json())
       .then(j => { if (vivo && j.mensagens) setMsgs(j.mensagens) }).catch(() => {})
     puxar(); const t = setInterval(puxar, 4000)
     return () => { vivo = false; clearInterval(t) }

@@ -3,7 +3,7 @@ import { useApp, DEMO } from './store'
 import { useMensagensReais, usarConversasReais } from './sync'
 import { ConectarWhatsApp, Desconectar, TesteEnvio, enviarWhatsApp, useStatusWpp } from './whatsapp'
 import {
-  COLUNAS, ORIGENS, S, T, addDias, brl, chamarHoje, conflito, dentroExpediente, diasDesde, durDe, emJogoHoje, esfriou, falta, fmtDia,
+  COLUNAS, ORIGENS, S, T, foneVisivel, addDias, brl, chamarHoje, conflito, dentroExpediente, diasDesde, durDe, emJogoHoje, esfriou, falta, fmtDia,
   hhmm, hm, hoje, intervalos, manutencoes, mensagem, primeiroHorarioLivre, primeiroNome, proximaEtapa, receberMensagem, sumidos, uid,
   valorFechado, valorParado,
   type Appt, type Coluna, type Etapa, type Origem, type Quote, type State, type StatusConsulta, type StatusManut, type TipoAviso,
@@ -236,7 +236,7 @@ export function WhatsApp() {
             <div className="flex items-center gap-2 p-3 border-b border-line bg-white">
               <button className="md:hidden text-xl px-1" onClick={() => setAberto(null)}>←</button>
               <Avatar nome={c.nome} foto={c.foto} />
-              <div className="flex-1 min-w-0"><p className="font-semibold truncate">{c.nome}</p><p className="text-xs text-muted truncate">{c.fone} · {c.origem}{c.real && ' · WhatsApp real'}</p></div>
+              <div className="flex-1 min-w-0"><p className="font-semibold truncate">{c.nome}</p><p className="text-xs text-muted truncate">{foneVisivel(c.fone)} · {c.origem}{c.real && ' · WhatsApp real'}</p></div>
               <BotaoAgendar contactId={c.id} serviceId={card?.serviceId} pequeno />
               <button className="btn-soft px-2.5 py-1 text-xs" onClick={() => setLado(!lado)}>{lado ? 'Conversa' : 'Resumo'}</button>
             </div>
