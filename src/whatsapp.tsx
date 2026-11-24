@@ -8,7 +8,7 @@ export interface StatusWpp {
 }
 
 const api = async (action: string, post = false, extra = '') => {
-  const r = await fetch(`/api/evolution?action=${action}${extra}`, { method: post ? 'POST' : 'GET' })
+  const r = await fetch(`/api/wpp?action=${action}${extra}`, { method: post ? 'POST' : 'GET' })
   return r.json()
 }
 
@@ -37,20 +37,27 @@ export function ConectarWhatsApp() {
 
   useEffect(() => { if (conectado) { setQr(null); setCodigo(null) } }, [conectado])
 
-  async function gerar(comNumero = false) {
-    setCarregando(true); setErro('')
-    try {
-      const d = numero.replace(/\D/g, ''); const n = d.length <= 11 ? '55' + d : d
-      const r = await api('conectar', true, comNumero ? `&numero=${n}` : '')
-      if (r.erro) setErro(r.erro)
-      setQr(r.qr ?? null); setCodigo(comNumero ? r.codigo ?? null : null)
-      atualizar()
-    } catch { setErro('Não consegui falar com o servidor do WhatsApp') }
-    setCarregando(false)
+  // Inicia o pareamento (a função fica esperando a leitura) e acompanha o QR que ela publica.
+  function gerar(comNumero = false) {
+    setCarregando(true); setErro(''); setQr(null); setCodigo(null)
+    const d = numero.replace(/\D/g, ''); const n = d.length <= 11 ? '55' + d : d
+    fetch(`/api/wpp?action=conectar${comNumero ? `&numero=${n}` : ''}`, { method: 'POST' })
+      .then(r => r.json())
+      .then(j => { if (j.erro) setErro(j.erro); else if (j.estado === 'expirou') setErro('O código expirou. Toque para gerar outro.'); else if (j.estado === 'erro') setErro('O WhatsApp recusou a conexão. Tente de novo.') })
+      .catch(() => {})
+      .finally(() => { setCarregando(false); atualizar() })
   }
-
-  // O QR do WhatsApp expira em ~40s: renova enquanto estiver na tela.
-  useEffect(() => { if (!qr || conectado) return; const t = setTimeout(() => gerar(), 35000); return () => clearTimeout(t) }, [qr, conectado]) // eslint-disable-line
+  useEffect(() => {
+    if (!carregando) return
+    const t = setInterval(async () => {
+      try {
+        const j = await api('qr')
+        setQr(j.qr ?? null); setCodigo(j.codigo ?? null)
+        if (j.estado === 'conectado') atualizar()
+      } catch { /* tenta de novo */ }
+    }, 2000)
+    return () => clearInterval(t)
+  }, [carregando]) // eslint-disable-line
 
   if (!st) return <p className="text-sm text-muted">Verificando WhatsApp…</p>
   if (st.erro) return <p className="text-sm text-red-700 font-medium">{st.erro}. Tente de novo em instantes.</p>
@@ -69,7 +76,7 @@ export function ConectarWhatsApp() {
       {qr ? (
         <div className="space-y-2">
           <img src={qr} alt="QR code do WhatsApp" className="w-56 h-56 bg-white rounded-2xl p-2 mx-auto border border-line" />
-          <p className="text-xs text-center text-muted">No celular da clínica: WhatsApp › Aparelhos conectados › Conectar aparelho › aponte para o código.</p>
+          <p className="text-xs text-center text-muted">No celular da clínica: WhatsApp › Aparelhos conectados › Conectar aparelho › aponte para o código. O código se renova sozinho por até 1 minuto e meio.</p>
         </div>
       ) : codigo ? (
         <div className="text-center space-y-2">
@@ -77,7 +84,7 @@ export function ConectarWhatsApp() {
           <p className="text-xs text-muted">WhatsApp › Aparelhos conectados › Conectar aparelho › Conectar com número de telefone › digite este código.</p>
         </div>
       ) : null}
-      <button className="btn-gold w-full py-3" disabled={carregando} onClick={() => gerar()}>{carregando ? 'Gerando…' : qr ? 'Gerar outro QR code' : 'Mostrar QR code'}</button>
+      <button className="btn-gold w-full py-3" disabled={carregando} onClick={() => gerar()}>{carregando ? (qr || codigo ? 'Aguardando a leitura…' : 'Preparando…') : 'Mostrar QR code'}</button>
       <details className="text-xs text-muted">
         <summary className="cursor-pointer">Está no celular? Conectar com código</summary>
         <div className="flex gap-2 mt-2">
@@ -103,7 +110,7 @@ export interface ResultadoEnvio { ok: boolean; erro?: string; planoB?: string }
 /** Envia uma mensagem de verdade pelo WhatsApp da clínica (Evolution). */
 export async function enviarWhatsApp(numero: string, texto: string): Promise<ResultadoEnvio> {
   try {
-    const r = await fetch('/api/evolution?action=enviar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ numero, texto }) })
+    const r = await fetch('/api/wpp?action=enviar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ numero, texto }) })
     const j = await r.json()
     return r.ok ? { ok: true } : { ok: false, erro: j.erro ?? 'Não foi possível enviar', planoB: j.planoB }
   } catch { return { ok: false, erro: 'Sem conexão com o servidor' } }

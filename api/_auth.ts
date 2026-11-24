@@ -18,10 +18,10 @@ export function autorizado(req: IncomingMessage) {
 export const cookieLogin = () => `painel=${token()}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`
 export const cookieSair = () => 'painel=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0'
 
-export async function lerCorpo(req: IncomingMessage): Promise<any> {
+export async function lerCorpo(req: IncomingMessage, limite = 20000): Promise<any> {
   const pronto = (req as any).body
   if (pronto !== undefined) return typeof pronto === 'string' ? JSON.parse(pronto || '{}') : pronto
   let t = ''
-  for await (const c of req) { t += c; if (t.length > 20000) break }
+  for await (const c of req) { t += c; if (t.length > limite) break }
   try { return JSON.parse(t || '{}') } catch { return {} }
 }

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useApp, DEMO } from './store'
-import { useMensagensReais, usarConversasReais } from './sync'
+import { useMensagensReais, usarConversasReais, sincronizarAgora } from './sync'
 import { ConectarWhatsApp, Desconectar, TesteEnvio, enviarWhatsApp, useStatusWpp } from './whatsapp'
 import {
   COLUNAS, ORIGENS, S, T, foneVisivel, addDias, brl, chamarHoje, conflito, dentroExpediente, diasDesde, durDe, emJogoHoje, esfriou, falta, fmtDia,
@@ -212,7 +212,10 @@ export function WhatsApp() {
                 <button key={t.id} onClick={() => setFiltro(t.id)} className={`rounded-full px-3 py-1 whitespace-nowrap font-medium border ${filtro === t.id ? 'bg-ink text-white border-ink' : 'bg-white border-line text-muted'}`}>{t.nome}</button>
               ))}
             </div>
-            {DEMO && <button className="text-[11px] text-gold underline text-left" onClick={simularSite}>(demonstração) chegar mensagem “Vim pelo site da OrtoClin…”</button>}
+            <div className="flex flex-wrap gap-x-3 gap-y-1">
+              {usarConversasReais(s.clinica.conversasReais) && <button className="text-[11px] text-gold font-semibold underline" onClick={() => { sincronizarAgora(); toast('Buscando mensagens novas no WhatsApp…') }}>↻ Atualizar agora</button>}
+              {DEMO && <button className="text-[11px] text-gold underline text-left" onClick={simularSite}>(demonstração) chegar mensagem “Vim pelo site da OrtoClin…”</button>}
+            </div>
           </div>
           <div className="overflow-y-auto flex-1">
             {lista.map(({ c, ult }) => (
@@ -904,7 +907,7 @@ function WhatsAppAjustes() {
       <ConectarWhatsApp />
       <label className="flex items-start gap-3 rounded-2xl border border-line p-3 cursor-pointer">
         <input type="checkbox" className="mt-1 accent-[#B8913F]" checked={reais} onChange={e => set(x => ({ ...x, clinica: { ...x.clinica, conversasReais: e.target.checked } }))} />
-        <span className="text-sm"><b>Mostrar as conversas reais do WhatsApp no painel</b><br /><span className="text-muted">As mensagens das pacientes aparecem na aba WhatsApp em poucos segundos. Quem responder sai de “Chamar hoje”, e quem escrever “Vim pelo site” entra com origem Site.</span></span>
+        <span className="text-sm"><b>Mostrar as conversas reais do WhatsApp no painel</b><br /><span className="text-muted">Com o painel aberto, o site busca as mensagens novas a cada minuto (ou na hora, em “Atualizar agora”). Quem responder sai de “Chamar hoje”, e quem escrever “Vim pelo site” entra com origem Site.</span></span>
       </label>
       {st?.estado === 'open' && <><TesteEnvio /><Desconectar /></>}
       <p className="text-xs text-muted">Proteção do número: até 40 mensagens por dia, intervalo de 20 a 60 segundos entre envios, só das 8h às 20h e nada de envio em massa.</p>

@@ -15,7 +15,16 @@ npm run dev
 ## Publicar na Vercel
 Importe o repositório na Vercel (detecta Vite sozinho). Nenhuma variável é obrigatória.
 
-## WhatsApp (Evolution API)
+## WhatsApp direto no site (Baileys + Supabase)
+O padrão agora não depende de servidor próprio: as funções do site (`api/wpp.ts` e `api/_wa.ts`) usam o Baileys.
+- **Conectar:** Ajustes › WhatsApp › QR code. A sessão fica salva no Supabase (`wa_auth`), então não precisa ler de novo a cada entrada.
+- **Sincronizar:** com o painel aberto, a cada 60 s o site conecta, puxa as mensagens novas para o Supabase (`wa_messages`, `wa_chats`) e desconecta. “↻ Atualizar agora” na aba WhatsApp força na hora.
+- **Enviar:** conecta, mostra “digitando…”, envia e desconecta.
+- **Dados do painel** (contatos, etiquetas, cards, agenda) ficam em `painel_estado`, compartilhados entre dona e recepção.
+- Variáveis na Vercel: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `PAINEL_SENHA`. Tabelas: `supabase/schema.sql`.
+- Limite: as mensagens só chegam quando alguém está com o painel aberto (ficam guardadas no WhatsApp até lá).
+
+## WhatsApp pela Evolution API (alternativa com servidor)
 Na Vercel, em Settings > Environment Variables, adicione:
 
 | Variável | Exemplo |

@@ -1,12 +1,8 @@
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { seed, type State } from './data'
 
-// Sem Supabase configurado, a demo guarda tudo no navegador (localStorage).
-// Com VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY, o estado é salvo na tabela demo_state.
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
-const key = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
-export const supabase = url && key ? createClient(url, key) : null
+// Os dados do painel ficam no Supabase (via /api/estado), para dona e recepção verem o mesmo em qualquer aparelho.
+// Sem Supabase configurado, ficam só neste navegador (localStorage).
 const LS = 'painel-ortoclin-demo-v1'
 
 function carregarLocal(): State {
@@ -19,6 +15,7 @@ export type PreAgendar = { contactId: string; serviceId?: string } | null
 type Ctx = {
   s: State; set: (fn: (s: State) => State) => void; reset: () => void; toast: (t: string) => void; aviso: string
   tela: Tela; setTela: (t: Tela) => void; pre: PreAgendar; irAgendar: (contactId: string, serviceId?: string) => void; limparPre: () => void
+  nuvem: boolean; ligarNuvem: () => void
 }
 /** Modo demonstração: dados fictícios e WhatsApp sem avisos. Desligue com VITE_DEMO=false. */
 export const DEMO = import.meta.env.VITE_DEMO !== 'false'
@@ -30,23 +27,56 @@ export function Provider({ children }: { children: ReactNode }) {
   const [aviso, setAviso] = useState('')
   const [tela, setTela] = useState<Tela>('chamar')
   const [pre, setPre] = useState<PreAgendar>(null)
-  const pronto = useRef(!supabase)
+  const [nuvem, setNuvem] = useState(false)
+  const versao = useRef<string | null>(null)
+  const enviado = useRef('')
+  const pendente = useRef(false)
+  const atual = useRef(s); atual.current = s
 
-  useEffect(() => {
-    if (!supabase) return
-    supabase.from('demo_state').select('data').eq('id', 'default').maybeSingle().then(({ data }) => {
-      if (data?.data) setS(data.data as State)
-      pronto.current = true
-    })
+  /** Busca o estado no Supabase; na primeira vez (vazio), sobe o que está neste navegador. */
+  const puxar = useCallback(async () => {
+    try {
+      const r = await fetch('/api/estado'); if (!r.ok) return
+      const j = await r.json(); if (!j.ativo) return
+      setNuvem(true)
+      if (j.data) {
+        if (j.versao !== versao.current && !pendente.current) { versao.current = j.versao; enviado.current = JSON.stringify(j.data); setS(j.data) }
+      } else {
+        const corpo = JSON.stringify(atual.current)
+        const p = await fetch('/api/estado', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: atual.current }) })
+        if (p.ok) { versao.current = (await p.json()).versao; enviado.current = corpo }
+      }
+    } catch { /* sem conexão: segue com o que tem */ }
   }, [])
 
+  // a cada 15 s, traz o que a outra pessoa mudou
+  useEffect(() => {
+    if (!nuvem) return
+    const t = setInterval(puxar, 15000)
+    return () => clearInterval(t)
+  }, [nuvem, puxar])
+
+  // grava a cada mudança (1 s depois da última)
   useEffect(() => {
     try { localStorage.setItem(LS, JSON.stringify(s)) } catch { /* sem storage */ }
-    if (!supabase || !pronto.current) return
-    const t = setTimeout(() => { supabase.from('demo_state').upsert({ id: 'default', data: s }).then() }, 600)
+    if (!nuvem) return
+    const corpo = JSON.stringify(s)
+    if (corpo === enviado.current) return
+    pendente.current = true
+    const t = setTimeout(async () => {
+      try {
+        const r = await fetch('/api/estado', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: s }) })
+        if (r.ok) { versao.current = (await r.json()).versao; enviado.current = corpo }
+      } catch { /* tenta na próxima mudança */ }
+      pendente.current = false
+    }, 1000)
     return () => clearTimeout(t)
-  }, [s])
+  }, [s, nuvem])
 
   const toast = (t: string) => { setAviso(t); setTimeout(() => setAviso(''), 2600) }
-  return <C.Provider value={{ s, set: setS, reset: () => setS(seed()), toast, aviso, tela, setTela, pre, irAgendar: (contactId, serviceId) => { setPre({ contactId, serviceId }); setTela('agenda') }, limparPre: () => setPre(null) }}>{children}</C.Provider>
+  return <C.Provider value={{
+    s, set: setS, reset: () => setS(seed()), toast, aviso, tela, setTela, pre,
+    irAgendar: (contactId, serviceId) => { setPre({ contactId, serviceId }); setTela('agenda') }, limparPre: () => setPre(null),
+    nuvem, ligarNuvem: puxar,
+  }}>{children}</C.Provider>
 }

@@ -7,7 +7,7 @@ import { defineConfig, loadEnv, type Plugin } from 'vite'
 const apiLocal = (): Plugin => ({
   name: 'api-local',
   configureServer(server) {
-    for (const nome of ['evolution', 'login']) {
+    for (const nome of ['evolution', 'login', 'wpp', 'estado']) {
       server.middlewares.use(`/api/${nome}`, async (req, res) => {
         const mod = await server.ssrLoadModule(`/api/${nome}.ts`)
         await mod.default(req, res)
@@ -18,7 +18,7 @@ const apiLocal = (): Plugin => ({
 
 // Duas páginas: o site da clínica na raiz (/) e o painel em /painel.
 export default defineConfig(({ mode }) => {
-  Object.assign(process.env, loadEnv(mode, process.cwd(), ['EVOLUTION_', 'PAINEL_']))
+  Object.assign(process.env, loadEnv(mode, process.cwd(), ['EVOLUTION_', 'PAINEL_', 'SUPABASE_', 'WA_']))
   return {
     plugins: [react(), tailwindcss(), apiLocal()],
     build: {

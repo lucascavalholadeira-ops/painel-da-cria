@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Provider, useApp, supabase, DEMO, type Tela } from './store'
+import { Provider, useApp, DEMO, type Tela } from './store'
 import { brl, valorParado, chamarHoje, T } from './data'
 import { useStatusWpp } from './whatsapp'
 import { SyncWhatsApp } from './sync'
@@ -75,7 +75,8 @@ function Login({ onEntrar }: { onEntrar: (p: Papel) => void }) {
 }
 
 function Shell({ papel, sair }: { papel: Papel; sair: () => void }) {
-  const { s, aviso, toast, tela, setTela } = useApp()
+  const { s, aviso, toast, tela, setTela, nuvem, ligarNuvem } = useApp()
+  useEffect(() => { ligarNuvem() }, [ligarNuvem])
   const telas = TELAS.filter(t => !t.soDona || papel === 'dona')
   const { st: wpp } = useStatusWpp(DEMO ? 0 : 60000)
   const wppCaiu = !DEMO && wpp?.configurado && wpp.estado !== 'open'
@@ -106,7 +107,7 @@ function Shell({ papel, sair }: { papel: Papel; sair: () => void }) {
         ))}
         <div className="mt-auto px-3 space-y-1 text-xs text-muted">
           <p className="font-medium text-ink">{papel === 'dona' ? 'Dra. Elizabeth' : 'Recepção'}</p>
-          {!DEMO && <p>{supabase ? 'Salvo no Supabase' : 'Salvo neste navegador'}</p>}
+          <p>{nuvem ? 'Dados salvos na nuvem' : 'Dados salvos neste navegador'}</p>
           <button className="underline hover:text-ink" onClick={sair}>Sair</button>
           <p className="pt-3 text-[10px] text-muted/70">Feito pela Cria</p>
         </div>
