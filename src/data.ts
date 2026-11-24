@@ -12,6 +12,9 @@ export interface Professional { id: string; nome: string; cor: string; horario: 
 export interface Contact {
   id: string; nome: string; fone: string; tagId: string | null; atentar: string
   origem: Origem; manutencao?: number // dias entre manutenções do aparelho (só quem está em tratamento ortodôntico)
+  real?: boolean // veio do WhatsApp de verdade (mensagens lidas da Evolution e enviadas de verdade)
+  foto?: string | null
+  ultima?: { texto: string; deMim: boolean; ts: number } // última mensagem real vista
 }
 export interface Msg { id: string; contactId: string; dir: 'in' | 'out'; texto: string; ts: number }
 export interface Etapa { id: string; nome: string; valor: number; situacao: Situacao }
@@ -29,7 +32,7 @@ export interface Proc { id: string; contactId: string; serviceId: string; data: 
 export interface Envio { contactId: string; dia: string; motivo: string }
 
 export interface State {
-  clinica: { nome: string; subtitulo: string; endereco: string; prazoEsfriar: number; ativacao: string; confirmacaoVespera: boolean; horaConfirmacao: string }
+  clinica: { nome: string; subtitulo: string; endereco: string; prazoEsfriar: number; ativacao: string; confirmacaoVespera: boolean; horaConfirmacao: string; conversasReais?: boolean }
   tags: Tag[]; services: Service[]; profs: Professional[]
   contacts: Contact[]; msgs: Msg[]; quotes: Quote[]; appts: Appt[]; procs: Proc[]; envios: Envio[]
   templates: Record<string, string>
@@ -211,6 +214,39 @@ export function receberMensagem(s: State, nome: string, fone: string, texto: str
     envios: s.envios.some(e => e.contactId === cid && e.dia === d) || contacts !== s.contacts ? s.envios : [...s.envios, { contactId: cid, dia: d, motivo: 'respondeu' }],
     quotes: s.quotes.map(q => (q.contactId === cid ? { ...q, ultimoContato: d } : q)),
   }
+}
+
+// ---------- conversas reais (Evolution) ----------
+export interface ConversaReal { fone: string; nome: string | null; foto: string | null; ts: number; ultima: { texto: string; deMim: boolean; ts: number } | null }
+const so = (f: string) => f.replace(/\D/g, '')
+
+/** Junta as conversas do WhatsApp com os contatos do painel. Quem é novo entra com etiqueta Novo
+ *  (origem Site se escreveu "Vim pelo site…"); quem mandou mensagem nova conta como resposta. */
+export function sincronizarConversas(s: State, conversas: ConversaReal[]): State {
+  const d = hoje()
+  let mudou = false
+  let contacts = s.contacts, envios = s.envios, quotes = s.quotes
+  for (const cv of conversas) {
+    const i = contacts.findIndex(c => so(c.fone) === cv.fone)
+    const atual = i >= 0 ? contacts[i] : null
+    const u = cv.ultima
+    if (!atual) {
+      const site = !!u && !u.deMim && /^\s*vim pelo site/i.test(u.texto)
+      contacts = [...contacts, { id: 'w' + cv.fone, nome: cv.nome || '+' + cv.fone, fone: '+' + cv.fone, tagId: T.novo, atentar: '', origem: site ? 'Site' : 'Outro', real: true, foto: cv.foto, ultima: u ?? undefined }]
+      mudou = true
+      continue
+    }
+    if (u && (!atual.ultima || u.ts > atual.ultima.ts || !atual.real)) {
+      const respondeu = !u.deMim && (atual.ultima ? u.ts > atual.ultima.ts : Date.now() - u.ts < 86400000)
+      contacts = contacts.map((c, j) => (j === i ? { ...c, real: true, foto: cv.foto ?? c.foto, ultima: u } : c))
+      if (respondeu) {
+        if (!envios.some(e => e.contactId === atual.id && e.dia === d && e.motivo === 'respondeu')) envios = [...envios, { contactId: atual.id, dia: d, motivo: 'respondeu' }]
+        quotes = quotes.map(q => (q.contactId === atual.id ? { ...q, ultimoContato: d } : q))
+      }
+      mudou = true
+    }
+  }
+  return mudou ? { ...s, contacts, envios, quotes } : s
 }
 
 // ---------- dados da demonstração ----------

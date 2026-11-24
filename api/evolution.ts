@@ -19,6 +19,15 @@ async function evo(path: string, method = 'GET', body?: unknown) {
   return { status: r.status, j }
 }
 
+// Texto de uma mensagem da Evolution/Baileys (texto, legenda ou tipo da mídia)
+function textoDe(m: any): string {
+  const x = m?.message ?? {}
+  return x.conversation ?? x.extendedTextMessage?.text ?? x.imageMessage?.caption ?? x.videoMessage?.caption
+    ?? (x.imageMessage ? '📷 Foto' : x.audioMessage ? '🎤 Áudio' : x.videoMessage ? '🎬 Vídeo' : x.documentMessage ? '📄 Documento' : x.stickerMessage ? 'Figurinha' : '')
+}
+const tsDe = (m: any) => Number(m?.messageTimestamp ?? 0) * 1000
+const individual = (jid: string) => /@s\.whatsapp\.net$/.test(jid || '')
+
 const qrDe = (j: any) => j?.base64 || j?.qrcode?.base64 || null
 const codigoDe = (j: any) => j?.pairingCode || j?.qrcode?.pairingCode || null
 
@@ -46,6 +55,31 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
         if (i) perfil = { nome: i.profileName ?? null, numero: (i.ownerJid ?? '').split('@')[0] || null, foto: i.profilePicUrl ?? null }
       }
       return send(200, { configurado: true, estado, perfil })
+    }
+
+    if (action === 'conversas') {
+      const r = await evo(`/chat/findChats/${encodeURIComponent(INST)}`, 'POST', {})
+      const lista = (Array.isArray(r.j) ? r.j : r.j?.chats ?? []).filter((c: any) => individual(c.remoteJid ?? c.id))
+      const conversas = lista.map((c: any) => {
+        const jid = c.remoteJid ?? c.id
+        const u = c.lastMessage
+        return {
+          fone: jid.split('@')[0], nome: c.pushName ?? c.name ?? u?.pushName ?? null, foto: c.profilePicUrl ?? null,
+          ts: u ? tsDe(u) : new Date(c.updatedAt ?? 0).getTime(), naoLidas: c.unreadCount ?? c.unreadMessages ?? 0,
+          ultima: u ? { texto: textoDe(u), deMim: !!u.key?.fromMe, ts: tsDe(u) } : null,
+        }
+      }).sort((a: any, b: any) => b.ts - a.ts).slice(0, 150)
+      return send(200, { conversas })
+    }
+
+    if (action === 'mensagens') {
+      const fone = (url.searchParams.get('fone') || '').replace(/\D/g, '')
+      if (fone.length < 10) return send(400, { erro: 'Número inválido' })
+      const r = await evo(`/chat/findMessages/${encodeURIComponent(INST)}`, 'POST', { where: { key: { remoteJid: `${fone}@s.whatsapp.net` } }, page: 1, offset: 80 })
+      const regs = r.j?.messages?.records ?? (Array.isArray(r.j) ? r.j : [])
+      const mensagens = regs.map((m: any) => ({ id: m.key?.id ?? m.id, deMim: !!m.key?.fromMe, texto: textoDe(m), ts: tsDe(m) }))
+        .filter((m: any) => m.texto).sort((a: any, b: any) => a.ts - b.ts)
+      return send(200, { mensagens })
     }
 
     if (req.method !== 'POST') return send(405, { erro: 'Use POST' })

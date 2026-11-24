@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Provider, useApp, supabase, DEMO, type Tela } from './store'
 import { brl, valorParado, chamarHoje, T } from './data'
 import { useStatusWpp } from './whatsapp'
+import { SyncWhatsApp } from './sync'
 import { ChamarHoje, WhatsApp, Painel, Agenda, Sumidos, Resumo, Ajustes, Ajuda } from './screens'
 
 type Papel = 'dona' | 'recepcao'
@@ -93,6 +94,7 @@ function Shell({ papel, sair }: { papel: Papel; sair: () => void }) {
 
   return (
     <div className="min-h-dvh md:flex">
+      <SyncWhatsApp />
       <aside className="no-print hidden md:flex w-60 shrink-0 bg-white border-r border-line flex-col p-4 gap-1 sticky top-0 h-dvh">
         <div className="px-2 pt-1 pb-5"><Marca /></div>
         {telas.map(t => (

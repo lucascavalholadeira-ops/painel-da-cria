@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useApp, DEMO } from './store'
+import { useMensagensReais, usarConversasReais } from './sync'
 import { ConectarWhatsApp, Desconectar, TesteEnvio, enviarWhatsApp, useStatusWpp } from './whatsapp'
 import {
   COLUNAS, ORIGENS, S, T, addDias, brl, chamarHoje, conflito, dentroExpediente, diasDesde, durDe, emJogoHoje, esfriou, falta, fmtDia,
@@ -40,12 +41,13 @@ function marcarConsulta(s: State, a: Omit<Appt, 'id' | 'status'>): State {
 
 /** Fora do modo demonstração, manda de verdade pelo WhatsApp da clínica. Na demonstração, só simula. */
 function useDisparo() {
-  const { toast } = useApp()
-  return (fone: string, texto: string, nome: string) => {
-    if (DEMO) { toast(`Mensagem para ${primeiroNome(nome)} na fila do WhatsApp`); return }
+  const { s, toast } = useApp()
+  return (fone: string, texto: string, nome: string, depois?: () => void) => {
+    const real = s.contacts.find(x => x.fone === fone)?.real
+    if (DEMO && !real) { toast(`Mensagem para ${primeiroNome(nome)} na fila do WhatsApp`); return }
     toast(`Enviando para ${primeiroNome(nome)}…`)
     enviarWhatsApp(fone, texto).then(r => {
-      if (r.ok) toast(`Enviada para ${primeiroNome(nome)} ✓`)
+      if (r.ok) { toast(`Enviada para ${primeiroNome(nome)} ✓`); depois?.() }
       else { toast(`⚠️ ${r.erro}. Abrindo no WhatsApp do celular.`); if (r.planoB) window.open(r.planoB, '_blank', 'noopener') }
     })
   }
@@ -87,7 +89,9 @@ const Etiqueta = ({ s, tagId }: { s: State; tagId: string | null }) => {
   return <span className="chip" style={{ background: t.cor + '14', color: t.cor, borderColor: t.cor + '55' }}>{t.nome}</span>
 }
 
-const Avatar = ({ nome }: { nome: string }) => (
+const Avatar = ({ nome, foto }: { nome: string; foto?: string | null }) => foto
+  ? <img src={foto} alt="" className="w-10 h-10 shrink-0 rounded-full object-cover border border-line" onError={e => { e.currentTarget.style.display = 'none' }} />
+  : (
   <div className="w-10 h-10 shrink-0 rounded-full bg-gold-soft text-[#7a5f22] font-semibold text-sm flex items-center justify-center border border-gold-2/40">{nome.split(' ').map(p => p[0]).slice(0, 2).join('')}</div>
 )
 
@@ -161,18 +165,30 @@ export function WhatsApp() {
   const [lado, setLado] = useState(false)
 
   const lista = useMemo(() => s.contacts
-    .map(c => ({ c, ult: s.msgs.filter(m => m.contactId === c.id).sort((a, b) => b.ts - a.ts)[0] }))
+    .map(c => {
+      const local = s.msgs.filter(m => m.contactId === c.id).sort((a, b) => b.ts - a.ts)[0]
+      const ult = c.ultima && (!local || c.ultima.ts >= local.ts) ? { dir: c.ultima.deMim ? 'out' : 'in', texto: c.ultima.texto, ts: c.ultima.ts } : local
+      return { c, ult }
+    })
     .filter(({ c }) => c.nome.toLowerCase().includes(busca.toLowerCase()) && (!filtro || c.tagId === filtro))
     .sort((a, b) => (b.ult?.ts ?? 0) - (a.ult?.ts ?? 0)), [s, busca, filtro])
 
   const c = s.contacts.find(x => x.id === aberto)
-  const msgs = s.msgs.filter(m => m.contactId === aberto).sort((a, b) => a.ts - b.ts)
+  const reais = useMensagensReais(c?.real ? c.fone : null)
+  const msgs = c?.real && reais.msgs
+    ? reais.msgs.map(m => ({ id: m.id, contactId: c.id, dir: m.deMim ? 'out' : 'in', texto: m.texto, ts: m.ts }))
+    : s.msgs.filter(m => m.contactId === aberto).sort((a, b) => a.ts - b.ts)
   const card = s.quotes.find(q => q.contactId === aberto && q.coluna !== 'recusou')
   const consulta = s.appts.filter(a => a.contactId === aberto && a.data >= hoje() && a.status !== 'cancelado').sort((a, b) => (a.data + a.hora).localeCompare(b.data + b.hora))[0]
   const hora = (ts: number) => new Date(ts).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
   const editar = (campo: Partial<State['contacts'][number]>) => c && set(st => ({ ...st, contacts: st.contacts.map(x => (x.id === c.id ? { ...x, ...campo } : x)) }))
 
-  const mandar = () => { if (!texto.trim() || !c) return; set(st => ({ ...st, msgs: [...st.msgs, { id: uid(), contactId: c.id, dir: 'out', texto, ts: Date.now() }] })); if (!DEMO) disparar(c.fone, texto, c.nome); setTexto('') }
+  const mandar = () => {
+    if (!texto.trim() || !c) return
+    if (c.real) disparar(c.fone, texto, c.nome, reais.recarregar)
+    else { set(st => ({ ...st, msgs: [...st.msgs, { id: uid(), contactId: c.id, dir: 'out', texto, ts: Date.now() }] })); if (!DEMO) disparar(c.fone, texto, c.nome) }
+    setTexto('')
+  }
   const simularResposta = () => c && set(st => receberMensagem(st, c.nome, c.fone, 'Oi! Vi sua mensagem, quero sim.'))
   const simularSite = () => {
     const nomes = ['Luana Monteiro', 'Bruna Cardoso', 'Thaís Ribeiro', 'Paula Sena', 'Joana Matos']
@@ -201,7 +217,7 @@ export function WhatsApp() {
           <div className="overflow-y-auto flex-1">
             {lista.map(({ c, ult }) => (
               <div key={c.id} onClick={() => setAberto(c.id)} className={`flex gap-3 px-3 py-3 border-b border-line/70 cursor-pointer ${aberto === c.id ? 'bg-gold-soft/50' : 'hover:bg-cream'}`}>
-                <Avatar nome={c.nome} />
+                <Avatar nome={c.nome} foto={c.foto} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="font-semibold truncate flex-1">{c.nome}</p>
@@ -219,8 +235,8 @@ export function WhatsApp() {
           <div className="flex flex-col min-h-0 h-full">
             <div className="flex items-center gap-2 p-3 border-b border-line bg-white">
               <button className="md:hidden text-xl px-1" onClick={() => setAberto(null)}>←</button>
-              <Avatar nome={c.nome} />
-              <div className="flex-1 min-w-0"><p className="font-semibold truncate">{c.nome}</p><p className="text-xs text-muted truncate">{c.fone} · {c.origem}</p></div>
+              <Avatar nome={c.nome} foto={c.foto} />
+              <div className="flex-1 min-w-0"><p className="font-semibold truncate">{c.nome}</p><p className="text-xs text-muted truncate">{c.fone} · {c.origem}{c.real && ' · WhatsApp real'}</p></div>
               <BotaoAgendar contactId={c.id} serviceId={card?.serviceId} pequeno />
               <button className="btn-soft px-2.5 py-1 text-xs" onClick={() => setLado(!lado)}>{lado ? 'Conversa' : 'Resumo'}</button>
             </div>
@@ -247,7 +263,7 @@ export function WhatsApp() {
                   <input className="input" placeholder="Mensagem" value={texto} onChange={e => setTexto(e.target.value)} onKeyDown={e => e.key === 'Enter' && mandar()} />
                   <button className="btn-send" onClick={mandar}>➤</button>
                 </div>
-                {DEMO && <button className="text-[11px] text-muted underline pb-2 bg-white" onClick={simularResposta}>(demonstração) simular resposta da paciente</button>}
+                {DEMO && !c.real && <button className="text-[11px] text-muted underline pb-2 bg-white" onClick={simularResposta}>(demonstração) simular resposta da paciente</button>}
               </>
             )}
           </div>
@@ -880,10 +896,16 @@ export function Ajustes() {
 
 function WhatsAppAjustes() {
   const { st } = useStatusWpp(5000)
+  const { s, set } = useApp()
+  const reais = usarConversasReais(s.clinica.conversasReais)
   return (
     <div className="card p-5 space-y-4 max-w-md">
       <h3 className="text-xl">WhatsApp da clínica</h3>
       <ConectarWhatsApp />
+      <label className="flex items-start gap-3 rounded-2xl border border-line p-3 cursor-pointer">
+        <input type="checkbox" className="mt-1 accent-[#B8913F]" checked={reais} onChange={e => set(x => ({ ...x, clinica: { ...x.clinica, conversasReais: e.target.checked } }))} />
+        <span className="text-sm"><b>Mostrar as conversas reais do WhatsApp no painel</b><br /><span className="text-muted">As mensagens das pacientes aparecem na aba WhatsApp em poucos segundos. Quem responder sai de “Chamar hoje”, e quem escrever “Vim pelo site” entra com origem Site.</span></span>
+      </label>
       {st?.estado === 'open' && <><TesteEnvio /><Desconectar /></>}
       <p className="text-xs text-muted">Proteção do número: até 40 mensagens por dia, intervalo de 20 a 60 segundos entre envios, só das 8h às 20h e nada de envio em massa.</p>
     </div>
