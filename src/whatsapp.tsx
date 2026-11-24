@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 
+/** Motor do WhatsApp: '/api/evolution' (Evolution na VPS, padrão) ou '/api/wpp' (Baileys direto no site). */
+export const WPP_API = (import.meta.env.VITE_WPP_API as string | undefined) || '/api/evolution'
+
 export interface StatusWpp {
   configurado: boolean
   erro?: string
@@ -8,7 +11,7 @@ export interface StatusWpp {
 }
 
 const api = async (action: string, post = false, extra = '') => {
-  const r = await fetch(`/api/wpp?action=${action}${extra}`, { method: post ? 'POST' : 'GET' })
+  const r = await fetch(`${WPP_API}?action=${action}${extra}`, { method: post ? 'POST' : 'GET' })
   return r.json()
 }
 
@@ -37,25 +40,34 @@ export function ConectarWhatsApp() {
 
   useEffect(() => { if (conectado) { setQr(null); setCodigo(null) } }, [conectado])
 
-  // Inicia o pareamento (a função fica esperando a leitura) e acompanha o QR que ela publica.
+  // Pede o QR (ou o código) e fica acompanhando até o celular ler, por até 100 s.
+  const [modoCodigo, setModoCodigo] = useState(false)
   function gerar(comNumero = false) {
-    setCarregando(true); setErro(''); setQr(null); setCodigo(null)
+    setCarregando(true); setErro(''); setQr(null); setCodigo(null); setModoCodigo(comNumero)
     const d = numero.replace(/\D/g, ''); const n = d.length <= 11 ? '55' + d : d
-    fetch(`/api/wpp?action=conectar${comNumero ? `&numero=${n}` : ''}`, { method: 'POST' })
+    fetch(`${WPP_API}?action=conectar${comNumero ? `&numero=${n}` : ''}`, { method: 'POST' })
       .then(r => r.json())
-      .then(j => { if (j.erro) setErro(j.erro); else if (j.estado === 'expirou') setErro('O código expirou. Toque para gerar outro.'); else if (j.estado === 'erro') setErro('O WhatsApp recusou a conexão. Tente de novo.') })
-      .catch(() => {})
-      .finally(() => { setCarregando(false); atualizar() })
+      .then(j => {
+        if (j.erro) { setErro(j.erro); setCarregando(false); return }
+        if (j.qr && !comNumero) setQr(j.qr)
+        if (j.codigo) setCodigo(j.codigo)
+        if (j.estado === 'open') { setCarregando(false); atualizar() }
+        else if (j.estado === 'expirou' || j.estado === 'erro') { setErro(j.estado === 'expirou' ? 'O código expirou. Toque para gerar outro.' : 'O WhatsApp recusou a conexão. Tente de novo.'); setCarregando(false) }
+      })
+      .catch(() => { setErro('Não consegui falar com o servidor do WhatsApp'); setCarregando(false) })
   }
   useEffect(() => {
     if (!carregando) return
+    const inicio = Date.now()
     const t = setInterval(async () => {
+      if (Date.now() - inicio > 100000) { setCarregando(false); setErro('O código expirou. Toque para gerar outro.'); return }
       try {
         const j = await api('qr')
-        setQr(j.qr ?? null); setCodigo(j.codigo ?? null)
-        if (j.estado === 'conectado') atualizar()
+        if (j.estado === 'conectado') { setCarregando(false); atualizar(); return }
+        if (j.qr && !modoCodigo) setQr(j.qr)
+        if (j.codigo) setCodigo(j.codigo)
       } catch { /* tenta de novo */ }
-    }, 2000)
+    }, 3000)
     return () => clearInterval(t)
   }, [carregando]) // eslint-disable-line
 
@@ -76,7 +88,7 @@ export function ConectarWhatsApp() {
       {qr ? (
         <div className="space-y-2">
           <img src={qr} alt="QR code do WhatsApp" className="w-56 h-56 bg-white rounded-2xl p-2 mx-auto border border-line" />
-          <p className="text-xs text-center text-muted">No celular da clínica: WhatsApp › Aparelhos conectados › Conectar aparelho › aponte para o código. O código se renova sozinho por até 1 minuto e meio.</p>
+          <p className="text-xs text-center text-muted">No celular da clínica: WhatsApp › Aparelhos conectados › Conectar aparelho › aponte para o código. O código se renova sozinho enquanto estiver na tela.</p>
         </div>
       ) : codigo ? (
         <div className="text-center space-y-2">
@@ -110,7 +122,7 @@ export interface ResultadoEnvio { ok: boolean; erro?: string; planoB?: string }
 /** Envia uma mensagem de verdade pelo WhatsApp da clínica (Evolution). */
 export async function enviarWhatsApp(numero: string, texto: string): Promise<ResultadoEnvio> {
   try {
-    const r = await fetch('/api/wpp?action=enviar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ numero, texto }) })
+    const r = await fetch(`${WPP_API}?action=enviar`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ numero, texto }) })
     const j = await r.json()
     return r.ok ? { ok: true } : { ok: false, erro: j.erro ?? 'Não foi possível enviar', planoB: j.planoB }
   } catch { return { ok: false, erro: 'Sem conexão com o servidor' } }

@@ -2,7 +2,7 @@
 // para a dona e a recepção verem a mesma coisa em qualquer aparelho.
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { autorizado, lerCorpo } from './_auth.js'
-import { configurado, db } from './_wa.js'
+import { configurado, db } from './_db.js'
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
   const send = (code: number, obj: unknown) => {

@@ -908,7 +908,7 @@ function WhatsAppAjustes() {
       <ConectarWhatsApp />
       <label className="flex items-start gap-3 rounded-2xl border border-line p-3 cursor-pointer">
         <input type="checkbox" className="mt-1 accent-[#B8913F]" checked={reais} onChange={e => set(x => ({ ...x, clinica: { ...x.clinica, conversasReais: e.target.checked } }))} />
-        <span className="text-sm"><b>Mostrar as conversas reais do WhatsApp no painel</b><br /><span className="text-muted">Com o painel aberto, o site busca as mensagens novas a cada minuto (ou na hora, em “Atualizar agora”). Quem responder sai de “Chamar hoje”, e quem escrever “Vim pelo site” entra com origem Site.</span></span>
+        <span className="text-sm"><b>Mostrar as conversas reais do WhatsApp no painel</b><br /><span className="text-muted">As mensagens das pacientes aparecem na aba WhatsApp em poucos segundos, com foto de perfil. Quem responder sai de “Chamar hoje”, e quem escrever “Vim pelo site” entra com origem Site.</span></span>
       </label>
       {st?.estado === 'open' && <><TesteEnvio /><Desconectar /></>}
       <p className="text-xs text-muted">Proteção do número: até 40 mensagens por dia, intervalo de 20 a 60 segundos entre envios, só das 8h às 20h e nada de envio em massa.</p>

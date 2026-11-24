@@ -1,14 +1,11 @@
 // WhatsApp direto pelo Baileys, rodando nas funções do site (sem servidor próprio).
 // A sessão (credenciais e chaves) fica no Supabase. Cada ação conecta, faz o que precisa e desconecta.
 import makeWASocket, { Browsers, BufferJSON, DisconnectReason, initAuthCreds, proto, type WASocket, type WAMessage } from 'baileys'
-import { createClient } from '@supabase/supabase-js'
+import { configurado, db } from './_db.js'
 import { pino } from 'pino'
 import { HttpsProxyAgent } from 'https-proxy-agent'
 
-const URL_DB = process.env.SUPABASE_URL || ''
-const KEY_DB = process.env.SUPABASE_SERVICE_KEY || ''
-export const configurado = () => !!(URL_DB && KEY_DB)
-export const db = () => createClient(URL_DB, KEY_DB, { auth: { persistSession: false } })
+export { configurado, db }
 const logger = pino({ level: process.env.WA_LOG || 'silent' })
 // Só para testes locais atrás de proxy (WA_PROXY=http://...). Na Vercel fica vazio.
 const agente = process.env.WA_PROXY ? new HttpsProxyAgent(process.env.WA_PROXY) : undefined

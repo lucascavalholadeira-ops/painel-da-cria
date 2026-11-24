@@ -2,6 +2,7 @@
 // A chave fica só aqui, nunca no navegador, e só a instância da demo é acessível.
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { autorizado, lerCorpo } from './_auth.js'
+import { configurado as temDb, db } from './_db.js'
 
 const BASE = (process.env.EVOLUTION_API_URL || '').replace(/\/$/, '')
 const KEY = process.env.EVOLUTION_API_KEY || ''
@@ -38,6 +39,38 @@ function destino(v: string): string | null {
   return n.length >= 12 && n.length <= 13 ? n : null
 }
 
+/**
+ * Completa as fotos de perfil. As conversas no formato novo (@lid) vêm sem foto da Evolution:
+ * pede a foto a ela e guarda no Supabase (wa_chats.foto) por 3 dias, para não pedir de novo a cada vez.
+ */
+async function completarFotos(conversas: { jid: string; foto: string | null }[]) {
+  if (!temDb() || !conversas.length) return
+  const s = db()
+  const jids = conversas.map(c => c.jid)
+  const { data } = await s.from('wa_chats').select('jid,foto,foto_em').in('jid', jids)
+  const cache = new Map((data ?? []).map(r => [r.jid, r]))
+  const velho = Date.now() - 3 * 86400000
+  const buscar: string[] = []
+  for (const c of conversas) {
+    const r = cache.get(c.jid)
+    if (r?.foto_em && new Date(r.foto_em).getTime() > velho) { if (!c.foto) c.foto = r.foto ?? null }
+    else if (!c.foto) buscar.push(c.jid)
+  }
+  // até 12 por vez, em paralelo e com limite de tempo; o resto entra nas próximas atualizações
+  const lote = buscar.slice(0, 12)
+  const achadas = await Promise.all(lote.map(async jid => {
+    const r = await Promise.race([
+      evo(`/chat/fetchProfilePictureUrl/${encodeURIComponent(INST)}`, 'POST', { number: jid }).catch(() => null),
+      new Promise<null>(res => setTimeout(() => res(null), 5000)),
+    ])
+    return { jid, foto: (r as any)?.j?.profilePictureUrl ?? null, ok: !!r }
+  }))
+  const agora = new Date().toISOString()
+  const linhas = achadas.filter(a => a.ok).map(a => ({ jid: a.jid, foto: a.foto, foto_em: agora, updated_at: agora }))
+  if (linhas.length) await s.from('wa_chats').upsert(linhas, { onConflict: 'jid' })
+  for (const a of achadas) { const c = conversas.find(x => x.jid === a.jid); if (c && a.foto) c.foto = a.foto }
+}
+
 const qrDe = (j: any) => j?.base64 || j?.qrcode?.base64 || null
 const codigoDe = (j: any) => j?.pairingCode || j?.qrcode?.pairingCode || null
 
@@ -67,6 +100,15 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
       return send(200, { configurado: true, estado, perfil })
     }
 
+    if (action === 'qr') {
+      const st = await evo(`/instance/connectionState/${encodeURIComponent(INST)}`)
+      if (st.j?.instance?.state === 'open') return send(200, { estado: 'conectado' })
+      if (st.status === 404) return send(200, { estado: 'nada' })
+      const c = await evo(`/instance/connect/${encodeURIComponent(INST)}`)
+      if (c.j?.instance?.state === 'open') return send(200, { estado: 'conectado' })
+      return send(200, { estado: 'aguardando', qr: qrDe(c.j), codigo: codigoDe(c.j) })
+    }
+
     if (action === 'conversas') {
       const r = await evo(`/chat/findChats/${encodeURIComponent(INST)}`, 'POST', {})
       const lista = (Array.isArray(r.j) ? r.j : r.j?.chats ?? []).filter((c: any) => individual(c.remoteJid ?? c.id))
@@ -74,12 +116,13 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
         const jid = c.remoteJid ?? c.id
         const u = c.lastMessage
         return {
-          fone: endereco(jid), nome: c.pushName ?? c.name ?? (u && !u.key?.fromMe ? u.pushName : null) ?? null, foto: c.profilePicUrl ?? null,
+          jid, fone: endereco(jid), nome: c.pushName ?? c.name ?? (u && !u.key?.fromMe ? u.pushName : null) ?? null, foto: c.profilePicUrl ?? null,
           ts: u ? tsDe(u) : new Date(c.updatedAt ?? 0).getTime(), naoLidas: c.unreadCount ?? c.unreadMessages ?? 0,
           ultima: u ? { texto: textoDe(u), deMim: !!u.key?.fromMe, ts: tsDe(u) } : null,
         }
       }).sort((a: any, b: any) => b.ts - a.ts).slice(0, 150)
-      return send(200, { conversas })
+      await completarFotos(conversas).catch(() => {})
+      return send(200, { conversas: conversas.map(({ jid, ...c }: any) => c) })
     }
 
     if (action === 'mensagens') {
@@ -113,6 +156,8 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
       }
       return send(200, { estado: 'connecting', qr: qrDe(c.j), codigo: codigoDe(c.j) })
     }
+
+    if (action === 'sincronizar') return send(200, { ok: true, continuo: true })
 
     if (action === 'enviar') {
       const { numero, texto } = await lerCorpo(req)
