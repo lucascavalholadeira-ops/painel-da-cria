@@ -30,6 +30,19 @@ function aplicarEtiqueta(s: State, contactId: string, tagId: string): State {
   return { ...s, quotes, contacts }
 }
 
+const ABERTAS: Coluna[] = ['para_organizar', 'em_duvida', 'fechou_parcial']
+const cardAberto = (s: State, contactId: string) => s.quotes.find(q => q.contactId === contactId && ABERTAS.includes(q.coluna))
+
+/** Coloca o contato em "Para organizar" no Painel (sem duplicar se já tiver card aberto). */
+function adicionarAoPainel(s: State, contactId: string): State {
+  if (cardAberto(s, contactId)) return s
+  const c = s.contacts.find(x => x.id === contactId)
+  return {
+    ...s,
+    quotes: [...s.quotes, { id: uid(), contactId, serviceId: c?.tagId === T.trat ? S.inst : S.aval, coluna: 'para_organizar', total: 0, fechado: 0, atentar: c?.atentar ?? '', dataOrc: hoje(), ultimoContato: hoje(), tentativas: 0 }],
+  }
+}
+
 function marcarConsulta(s: State, a: Omit<Appt, 'id' | 'status'>): State {
   return {
     ...s,
@@ -104,6 +117,23 @@ const Aviso = ({ tipo, children }: { tipo: TipoAviso | 'atentar'; children: Reac
 const BotaoAgendar = ({ contactId, serviceId, pequeno = false }: { contactId: string; serviceId?: string; pequeno?: boolean }) => {
   const { irAgendar } = useApp()
   return <button className={`btn-ghost ${pequeno ? 'px-2.5 py-1 text-xs' : ''}`} onClick={e => { e.stopPropagation(); irAgendar(contactId, serviceId) }}>📅 Agendar</button>
+}
+
+/** Ao lado do nome no WhatsApp: "+ Painel" (cria em Para organizar) ou "No painel · coluna". */
+const BotaoPainel = ({ contactId }: { contactId: string }) => {
+  const { s, set, toast, setTela } = useApp()
+  const card = cardAberto(s, contactId)
+  if (card) return (
+    <button className="chip bg-gold-soft/60 text-[#6b531c] border-gold-2/50 hover:bg-gold-soft" title="Abrir o Painel" onClick={e => { e.stopPropagation(); setTela('painel') }}>
+      🗂️ No painel · {COLUNAS.find(x => x.id === card.coluna)?.nome}
+    </button>
+  )
+  return (
+    <button className="chip bg-white text-gold border-gold/50 hover:bg-gold-soft/60" title="Adicionar em Para organizar"
+      onClick={e => { e.stopPropagation(); set(st => adicionarAoPainel(st, contactId)); toast(`${primeiroNome(s.contacts.find(x => x.id === contactId)?.nome ?? '')} foi para “Para organizar” no Painel`) }}>
+      + Painel
+    </button>
+  )
 }
 
 // ---------- 1. Chamar hoje ----------
@@ -228,7 +258,10 @@ export function WhatsApp() {
                     <span className="text-[11px] text-muted">{ult && hora(ult.ts)}</span>
                   </div>
                   <p className="text-sm text-muted truncate">{ult?.dir === 'out' && '✓✓ '}{ult?.texto}</p>
-                  <button className="mt-1" onClick={abrirEtiqueta(c.id)}><Etiqueta s={s} tagId={c.tagId} /></button>
+                  <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                    <button onClick={abrirEtiqueta(c.id)}><Etiqueta s={s} tagId={c.tagId} /></button>
+                    <BotaoPainel contactId={c.id} />
+                  </div>
                 </div>
               </div>
             ))}
@@ -241,6 +274,7 @@ export function WhatsApp() {
               <button className="md:hidden text-xl px-1" onClick={() => setAberto(null)}>←</button>
               <Avatar nome={c.nome} foto={c.foto} />
               <div className="flex-1 min-w-0"><p className="font-semibold truncate">{c.nome}</p><p className="text-xs text-muted truncate">{foneVisivel(c.fone)} · {c.origem}{c.real && ' · WhatsApp real'}</p></div>
+              <span className="hidden sm:inline-flex"><BotaoPainel contactId={c.id} /></span>
               <BotaoAgendar contactId={c.id} serviceId={card?.serviceId} pequeno />
               <button className="btn-soft px-2.5 py-1 text-xs" onClick={() => setLado(!lado)}>{lado ? 'Conversa' : 'Resumo'}</button>
             </div>
