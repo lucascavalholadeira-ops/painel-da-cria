@@ -90,7 +90,8 @@ const Etiqueta = ({ s, tagId }: { s: State; tagId: string | null }) => {
 }
 
 const Avatar = ({ nome, foto }: { nome: string; foto?: string | null }) => foto
-  ? <img src={foto} alt="" className="w-10 h-10 shrink-0 rounded-full object-cover border border-line" onError={e => { e.currentTarget.style.display = 'none' }} />
+  ? <img src={foto} alt="" referrerPolicy="no-referrer" loading="lazy" className="w-10 h-10 shrink-0 rounded-full object-cover border border-line bg-gold-soft"
+      onError={e => { const el = e.currentTarget; el.replaceWith(Object.assign(document.createElement('div'), { className: 'w-10 h-10 shrink-0 rounded-full bg-gold-soft text-[#7a5f22] font-semibold text-sm flex items-center justify-center border border-gold-2/40', textContent: nome.split(' ').map(p => p[0]).slice(0, 2).join('') })) }} />
   : (
   <div className="w-10 h-10 shrink-0 rounded-full bg-gold-soft text-[#7a5f22] font-semibold text-sm flex items-center justify-center border border-gold-2/40">{nome.split(' ').map(p => p[0]).slice(0, 2).join('')}</div>
 )
@@ -131,7 +132,7 @@ export function ChamarHoje() {
         return (
           <div key={k} className="card p-4 md:p-5">
             <div className="flex items-start gap-3">
-              <Avatar nome={i.contact.nome} />
+              <Avatar nome={i.contact.nome} foto={i.contact.foto} />
               <div className="flex-1 min-w-0 space-y-1.5">
                 <p className="font-semibold">{i.contact.nome}</p>
                 <div className="flex flex-wrap gap-1.5">
@@ -570,7 +571,7 @@ export function Agenda() {
               <div key={c.id} draggable onDragStart={() => setArrasta({ tipo: 'contato', id: c.id })}
                 onClick={() => { const h = primeiroHorarioLivre(s, s.profs[0].id, dia, S.aval); setNovo({ profId: s.profs[0].id, hora: h ?? '08:00', dia, contactId: c.id }) }}
                 className="flex items-center gap-2 p-2 rounded-xl bg-rose-50 border border-rose-100 mb-2 cursor-grab">
-                <Avatar nome={c.nome} /><div className="min-w-0"><p className="font-semibold text-sm truncate">{c.nome}</p><p className="text-[11px] text-muted truncate">{c.origem}{c.atentar && ` · ⚠️ ${c.atentar}`}</p></div>
+                <Avatar nome={c.nome} foto={c.foto} /><div className="min-w-0"><p className="font-semibold text-sm truncate">{c.nome}</p><p className="text-[11px] text-muted truncate">{c.origem}{c.atentar && ` · ⚠️ ${c.atentar}`}</p></div>
               </div>
             ))}
             <div className="mt-4 pt-3 border-t border-line space-y-1 text-[11px] text-muted">
@@ -628,7 +629,7 @@ function Manutencoes() {
             <div className="space-y-2">
               {itens.map(m => (
                 <div key={m.contact.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-line p-2.5">
-                  <Avatar nome={m.contact.nome} />
+                  <Avatar nome={m.contact.nome} foto={m.contact.foto} />
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm truncate">{m.contact.nome}</p>
                     <p className="text-xs text-muted">
@@ -703,7 +704,7 @@ export function Sumidos() {
         const texto = mensagem(s, 'sumido', x.contact, { procedimento: x.service.nome.toLowerCase() })
         return (
           <div key={x.contact.id} className="card p-4 flex flex-col sm:flex-row sm:items-center gap-3">
-            <div className="flex items-center gap-3 flex-1"><Avatar nome={x.contact.nome} />
+            <div className="flex items-center gap-3 flex-1"><Avatar nome={x.contact.nome} foto={x.contact.foto} />
               <div className="space-y-1"><p className="font-semibold">{x.contact.nome}</p><Aviso tipo="sumida">Há {x.dias} dias sem voltar · {x.service.nome} em {fmtDia(x.proc.data)}</Aviso></div></div>
             <div className="flex gap-2 justify-end">
               <BotaoAgendar contactId={x.contact.id} serviceId={x.service.id} />

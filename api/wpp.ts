@@ -2,7 +2,7 @@
 // Mesmo formato de respostas da antiga /api/evolution, para o painel não precisar saber qual motor está por trás.
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { autorizado, lerCorpo } from './_auth.js'
-import { apagarSessao, comConexao, configurado, db, destinoJid, destravar, endereco, info, parear, setInfo, travar } from './_wa.js'
+import { apagarSessao, atualizarFotos, comConexao, configurado, db, destinoJid, destravar, endereco, info, parear, setInfo, travar } from './_wa.js'
 
 export const config = { maxDuration: 120 }
 
@@ -68,8 +68,8 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     if (action === 'sincronizar') {
       if (!(await travar(45))) return send(200, { ok: false, ocupado: true })
       try {
-        const n = await comConexao(async c => c.recebidas.length)
-        return send(200, { ok: true, recebidas: n })
+        const r = await comConexao(async c => ({ recebidas: c.recebidas.length, fotos: await atualizarFotos(c.sock).catch(() => 0) }))
+        return send(200, { ok: true, ...r })
       } finally { await destravar() }
     }
 

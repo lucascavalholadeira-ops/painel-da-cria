@@ -239,9 +239,12 @@ export function sincronizarConversas(s: State, conversas: ConversaReal[]): State
       mudou = true
       continue
     }
+    if (cv.foto !== undefined && cv.foto !== atual.foto && !(u && (!atual.ultima || u.ts > atual.ultima.ts || !atual.real))) {
+      contacts = contacts.map((c, j) => (j === i ? { ...c, foto: cv.foto } : c)); mudou = true
+    }
     if (u && (!atual.ultima || u.ts > atual.ultima.ts || !atual.real)) {
       const respondeu = !u.deMim && (atual.ultima ? u.ts > atual.ultima.ts : Date.now() - u.ts < 86400000)
-      contacts = contacts.map((c, j) => (j === i ? { ...c, real: true, foto: cv.foto ?? c.foto, ultima: u, nome: c.nome === 'Contato do WhatsApp' && cv.nome ? cv.nome : c.nome } : c))
+      contacts = contacts.map((c, j) => (j === i ? { ...c, real: true, foto: cv.foto !== undefined ? cv.foto : c.foto, ultima: u, nome: c.nome === 'Contato do WhatsApp' && cv.nome ? cv.nome : c.nome } : c))
       if (respondeu) {
         if (!envios.some(e => e.contactId === atual.id && e.dia === d && e.motivo === 'respondeu')) envios = [...envios, { contactId: atual.id, dia: d, motivo: 'respondeu' }]
         quotes = quotes.map(q => (q.contactId === atual.id ? { ...q, ultimoContato: d } : q))

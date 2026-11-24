@@ -147,6 +147,24 @@ export async function gravarMensagens(lista: WAMessage[]) {
   return linhas.length
 }
 
+// ---------- fotos de perfil ----------
+/** Busca a foto de perfil das conversas mais recentes que ainda não têm (ou com foto de mais de 3 dias). */
+export async function atualizarFotos(sock: WASocket, max = 15) {
+  const s = db()
+  const limite = new Date(Date.now() - 3 * 86400000).toISOString()
+  const { data } = await s.from('wa_chats').select('jid').or(`foto_em.is.null,foto_em.lt.${limite}`).not('ultima_ts', 'is', null).order('ultima_ts', { ascending: false }).limit(max)
+  let achou = 0
+  const fim = Date.now() + 15000 // no máximo 15 s por sincronização; o resto fica para a próxima
+  for (const { jid } of data ?? []) {
+    if (Date.now() > fim) break
+    let foto: string | null = null
+    try { foto = (await Promise.race([sock.profilePictureUrl(jid, 'image'), new Promise<undefined>(r => setTimeout(r, 4000))])) ?? null } catch { foto = null } // sem foto ou escondida pela privacidade
+    if (foto) achou++
+    await s.from('wa_chats').update({ foto, foto_em: new Date().toISOString() }).eq('jid', jid)
+  }
+  return achou
+}
+
 // ---------- conexão ----------
 type Sessao = Awaited<ReturnType<typeof carregarSessao>>
 export interface Conexao { sock: WASocket; sessao: Sessao; recebidas: WAMessage[]; fechar: () => Promise<void> }

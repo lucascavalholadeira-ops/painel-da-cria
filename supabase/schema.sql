@@ -41,3 +41,4 @@ revoke all on function public.wa_travar(int) from public, anon, authenticated;
 revoke all on function public.wa_destravar() from public, anon, authenticated;
 
 alter table public.wa_chats add column if not exists telefone text;
+alter table public.wa_chats add column if not exists foto_em timestamptz;
