@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useApp, DEMO } from './store'
 import { useMensagensReais, usarConversasReais, sincronizarAgora } from './sync'
 import { ConectarWhatsApp, Desconectar, TesteEnvio, enviarWhatsApp, useStatusWpp } from './whatsapp'
@@ -299,20 +299,56 @@ export function WhatsApp() {
 
 // ---------- 3. Painel ----------
 export function Painel() {
-  const { s, set, toast } = useApp()
+  const { s, set, toast, irAgendar } = useApp()
   const disparar = useDisparo()
   const [arrastando, setArrastando] = useState<string | null>(null)
   const [abrir, setAbrir] = useState<{ q: Quote; coluna: Coluna } | null>(null)
+  const esperando = s.contacts.filter(c => c.tagId === T.esp && !s.appts.some(a => a.contactId === c.id && a.data >= hoje() && a.status !== 'cancelado'))
+  const colunaEsperando = (
+    <div className="snap-start shrink-0 w-[82vw] sm:w-72 lg:w-auto lg:flex-1 lg:min-w-60 bg-rose-50/70 border border-rose-100 rounded-[22px] p-2.5 min-h-[calc(100dvh-220px)]"
+      onDragOver={e => e.preventDefault()}
+      onDrop={() => {
+        const q = s.quotes.find(x => x.id === arrastando)
+        if (q) {
+          const nome = primeiroNome(s.contacts.find(c => c.id === q.contactId)?.nome ?? '')
+          const marcada = s.appts.filter(a => a.contactId === q.contactId && a.data >= hoje() && a.status !== 'cancelado').sort((a, b) => (a.data + a.hora).localeCompare(b.data + b.hora))[0]
+          if (marcada) toast(`${nome} já tem consulta marcada: ${fmtDia(marcada.data)} às ${marcada.hora}`)
+          else { set(st => ({ ...st, contacts: st.contacts.map(c => (c.id === q.contactId ? { ...c, tagId: T.esp } : c)) })); toast(`${nome} está esperando agendamento`) }
+        }
+        setArrastando(null)
+      }}>
+      <div className="flex items-center gap-2 px-2 py-1.5 mb-2">
+        <span className="w-2.5 h-2.5 rounded-full bg-[#B44D72]" />
+        <p className="font-semibold text-sm flex-1">Esperando agendamento <span className="text-muted font-normal">{esperando.length}</span></p>
+      </div>
+      {esperando.length === 0 && <p className="text-xs text-muted px-2">Ninguém esperando. Arraste um card para cá ou use a etiqueta no WhatsApp.</p>}
+      <div className="space-y-2.5">
+        {esperando.map(c => {
+          const card = s.quotes.find(q => q.contactId === c.id && q.coluna !== 'recusou')
+          return (
+            <div key={c.id} className="rounded-2xl border border-rose-100 bg-white p-3.5 shadow-[0_1px_6px_rgba(43,38,32,0.05)] space-y-1.5">
+              <div className="flex items-center gap-2.5">
+                <Avatar nome={c.nome} foto={c.foto} />
+                <div className="min-w-0 flex-1"><p className="font-semibold truncate">{c.nome}</p><p className="text-xs text-muted truncate">{c.origem}{card && ` · ${s.services.find(x => x.id === card.serviceId)?.nome}`}</p></div>
+              </div>
+              {c.atentar && <p className="text-xs text-amber-900">⚠️ {c.atentar}</p>}
+              <button className="btn-gold w-full py-1.5 text-xs" onClick={() => irAgendar(c.id, card?.serviceId)}>📅 Agendar</button>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
 
   return (
     <div>
       <p className="text-sm text-muted mb-4 hidden md:block">Arraste o card para a coluna certa. No celular, use “Mover para”.</p>
       <div className="flex gap-3 overflow-x-auto pb-4 snap-x">
-        {COLUNAS.map(col => {
+        {COLUNAS.map((col, idx) => {
           const cards = s.quotes.filter(q => q.coluna === col.id)
           const soma = cards.reduce((t, q) => t + (col.id === 'fechou_parcial' ? falta(q) : col.id === 'fechou' ? valorFechado(q) : q.total), 0)
-          return (
-            <div key={col.id} className="snap-start shrink-0 w-[82vw] sm:w-72 lg:w-auto lg:shrink lg:flex-1 lg:min-w-52 bg-[#F5EEDF] border border-line rounded-[22px] p-2.5 min-h-[calc(100dvh-220px)]"
+          return (<Fragment key={col.id}>
+            <div className="snap-start shrink-0 w-[82vw] sm:w-72 lg:w-auto lg:flex-1 lg:min-w-60 bg-[#F5EEDF] border border-line rounded-[22px] p-2.5 min-h-[calc(100dvh-220px)]"
               onDragOver={e => e.preventDefault()}
               onDrop={() => { const q = s.quotes.find(x => x.id === arrastando); if (q && q.coluna !== col.id) setAbrir({ q, coluna: col.id }); setArrastando(null) }}>
               <div className="flex items-center gap-2 px-2 py-1.5 mb-2">
@@ -342,7 +378,7 @@ export function Painel() {
                       <div className="flex gap-1.5 pt-1" onClick={e => e.stopPropagation()}>
                         <select className="flex-1 min-w-0 text-xs bg-cream border border-line rounded-lg px-2 py-1.5" value=""
                           onChange={e => setAbrir({ q, coluna: e.target.value as Coluna })}>
-                          <option value="">Mover para…</option>
+                          <option value="">Mover…</option>
                           {COLUNAS.filter(x => x.id !== q.coluna).map(x => <option key={x.id} value={x.id}>{x.nome}</option>)}
                         </select>
                         <BotaoAgendar contactId={c.id} serviceId={q.serviceId} pequeno />
@@ -352,7 +388,8 @@ export function Painel() {
                 })}
               </div>
             </div>
-          )
+            {idx === 0 && colunaEsperando}
+          </Fragment>)
         })}
       </div>
       {abrir && <CardModal q={abrir.q} coluna={abrir.coluna} fechar={() => setAbrir(null)}
