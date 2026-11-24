@@ -97,3 +97,35 @@ export function Desconectar() {
     setOk(true); await api('sair', true); location.reload()
   }}>Desconectar WhatsApp</button>
 }
+
+export interface ResultadoEnvio { ok: boolean; erro?: string; planoB?: string }
+
+/** Envia uma mensagem de verdade pelo WhatsApp da clínica (Evolution). */
+export async function enviarWhatsApp(numero: string, texto: string): Promise<ResultadoEnvio> {
+  try {
+    const r = await fetch('/api/evolution?action=enviar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ numero, texto }) })
+    const j = await r.json()
+    return r.ok ? { ok: true } : { ok: false, erro: j.erro ?? 'Não foi possível enviar', planoB: j.planoB }
+  } catch { return { ok: false, erro: 'Sem conexão com o servidor' } }
+}
+
+/** Mensagem de teste em Ajustes › WhatsApp, para provar que o envio funciona. */
+export function TesteEnvio() {
+  const [numero, setNumero] = useState('')
+  const [estado, setEstado] = useState<'' | 'enviando' | ResultadoEnvio>('')
+  return (
+    <div className="space-y-2 rounded-2xl border border-line p-3">
+      <p className="label">Mensagem de teste</p>
+      <div className="flex gap-2">
+        <input className="input" placeholder="Seu WhatsApp, ex.: 96999998888" inputMode="tel" value={numero} onChange={e => setNumero(e.target.value)} />
+        <button className="btn-send" disabled={numero.replace(/\D/g, '').length < 10 || estado === 'enviando'}
+          onClick={async () => { setEstado('enviando'); setEstado(await enviarWhatsApp(numero, 'Teste do Painel da Cria: o WhatsApp da clínica está enviando mensagens. ✅')) }}>
+          {estado === 'enviando' ? 'Enviando…' : 'Enviar teste'}
+        </button>
+      </div>
+      {typeof estado === 'object' && (estado.ok
+        ? <p className="text-sm text-green-800 font-medium">Enviada. Confira no seu WhatsApp.</p>
+        : <p className="text-sm text-red-700 font-medium">{estado.erro}{estado.planoB && <> · <a className="underline" href={estado.planoB} target="_blank" rel="noopener">abrir no WhatsApp</a></>}</p>)}
+    </div>
+  )
+}

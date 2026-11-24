@@ -1,6 +1,7 @@
 // Função de servidor (Vercel) que fala com a Evolution API.
 // A chave fica só aqui, nunca no navegador, e só a instância da demo é acessível.
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import { autorizado, lerCorpo } from './_auth'
 
 const BASE = (process.env.EVOLUTION_API_URL || '').replace(/\/$/, '')
 const KEY = process.env.EVOLUTION_API_KEY || ''
@@ -28,6 +29,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     res.setHeader('Cache-Control', 'no-store')
     res.end(JSON.stringify(obj))
   }
+  if (!autorizado(req)) return send(401, { erro: 'Entre no painel de novo' })
   if (!BASE || !KEY) return send(200, { configurado: false })
   const url = new URL(req.url || '/', 'http://local')
   const action = url.searchParams.get('action')
@@ -65,6 +67,21 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
         c = await evo(`/instance/connect/${encodeURIComponent(INST)}${q}`)
       }
       return send(200, { estado: 'connecting', qr: qrDe(c.j), codigo: codigoDe(c.j) })
+    }
+
+    if (action === 'enviar') {
+      const { numero, texto } = await lerCorpo(req)
+      let n = String(numero || '').replace(/\D/g, '')
+      if (n.length === 10 || n.length === 11) n = '55' + n
+      const msg = String(texto || '').trim()
+      if (n.length < 12 || n.length > 13) return send(400, { erro: 'Número inválido' })
+      if (!msg || msg.length > 1500) return send(400, { erro: 'Mensagem vazia ou longa demais' })
+      const st = await evo(`/instance/connectionState/${encodeURIComponent(INST)}`)
+      if (st.j?.instance?.state !== 'open') return send(409, { erro: 'WhatsApp desconectado', planoB: `https://wa.me/${n}?text=${encodeURIComponent(msg)}` })
+      // "digitando…" por 1,5 a 3,5 s antes de mandar, como uma pessoa
+      const r = await evo(`/message/sendText/${encodeURIComponent(INST)}`, 'POST', { number: n, text: msg, delay: 1500 + Math.floor(Math.random() * 2000) })
+      if (r.status >= 400) return send(502, { erro: 'O WhatsApp recusou o envio', detalhe: r.j, planoB: `https://wa.me/${n}?text=${encodeURIComponent(msg)}` })
+      return send(200, { ok: true, id: r.j?.key?.id ?? null })
     }
 
     if (action === 'sair') {

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useApp, DEMO } from './store'
-import { ConectarWhatsApp, Desconectar, useStatusWpp } from './whatsapp'
+import { ConectarWhatsApp, Desconectar, TesteEnvio, enviarWhatsApp, useStatusWpp } from './whatsapp'
 import {
   COLUNAS, ORIGENS, S, T, addDias, brl, chamarHoje, conflito, dentroExpediente, diasDesde, durDe, emJogoHoje, esfriou, falta, fmtDia,
   hhmm, hm, hoje, intervalos, manutencoes, mensagem, primeiroHorarioLivre, primeiroNome, proximaEtapa, receberMensagem, sumidos, uid,
@@ -35,6 +35,19 @@ function marcarConsulta(s: State, a: Omit<Appt, 'id' | 'status'>): State {
     appts: [...s.appts, { ...a, id: uid(), status: 'marcado' }],
     // ao agendar, vira Cliente (quem está em tratamento com aparelho continua como está)
     contacts: s.contacts.map(c => (c.id === a.contactId && c.tagId !== T.trat ? { ...c, tagId: T.cli } : c)),
+  }
+}
+
+/** Fora do modo demonstração, manda de verdade pelo WhatsApp da clínica. Na demonstração, só simula. */
+function useDisparo() {
+  const { toast } = useApp()
+  return (fone: string, texto: string, nome: string) => {
+    if (DEMO) { toast(`Mensagem para ${primeiroNome(nome)} na fila do WhatsApp`); return }
+    toast(`Enviando para ${primeiroNome(nome)}…`)
+    enviarWhatsApp(fone, texto).then(r => {
+      if (r.ok) toast(`Enviada para ${primeiroNome(nome)} ✓`)
+      else { toast(`⚠️ ${r.erro}. Abrindo no WhatsApp do celular.`); if (r.planoB) window.open(r.planoB, '_blank', 'noopener') }
+    })
   }
 }
 
@@ -90,7 +103,8 @@ const BotaoAgendar = ({ contactId, serviceId, pequeno = false }: { contactId: st
 
 // ---------- 1. Chamar hoje ----------
 export function ChamarHoje() {
-  const { s, set, toast } = useApp()
+  const { s, set } = useApp()
+  const disparar = useDisparo()
   const itens = chamarHoje(s)
   const [edit, setEdit] = useState<Record<string, string>>({})
   if (!itens.length) return <Vazio titulo="Tudo em dia por hoje.">Amanhã cedo aparece aqui quem precisa ser chamado.</Vazio>
@@ -126,7 +140,7 @@ export function ChamarHoje() {
             <textarea className="input mt-3 min-h-20 bg-cream/50" value={texto} onChange={e => setEdit({ ...edit, [k]: e.target.value })} />
             <div className="flex justify-end gap-2 mt-3">
               {i.aviso !== 'indicacao' && <BotaoAgendar contactId={i.contact.id} serviceId={i.serviceId} />}
-              <button className="btn-send px-6" onClick={() => { set(st => enviar(st, i.contact.id, texto, i.aviso === 'indicacao' ? 'indicacao' : i.aviso, i.quoteId)); toast(`Mensagem para ${primeiroNome(i.contact.nome)} na fila do WhatsApp`) }}>Enviar ➤</button>
+              <button className="btn-send px-6" onClick={() => { set(st => enviar(st, i.contact.id, texto, i.aviso === 'indicacao' ? 'indicacao' : i.aviso, i.quoteId)); disparar(i.contact.fone, texto, i.contact.nome) }}>Enviar ➤</button>
             </div>
           </div>
         )
@@ -138,6 +152,7 @@ export function ChamarHoje() {
 // ---------- 2. WhatsApp ----------
 export function WhatsApp() {
   const { s, set, toast } = useApp()
+  const disparar = useDisparo()
   const [aberto, setAberto] = useState<string | null>(null)
   const [busca, setBusca] = useState('')
   const [filtro, setFiltro] = useState('')
@@ -157,7 +172,7 @@ export function WhatsApp() {
   const hora = (ts: number) => new Date(ts).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
   const editar = (campo: Partial<State['contacts'][number]>) => c && set(st => ({ ...st, contacts: st.contacts.map(x => (x.id === c.id ? { ...x, ...campo } : x)) }))
 
-  const mandar = () => { if (!texto.trim() || !c) return; set(st => ({ ...st, msgs: [...st.msgs, { id: uid(), contactId: c.id, dir: 'out', texto, ts: Date.now() }] })); setTexto('') }
+  const mandar = () => { if (!texto.trim() || !c) return; set(st => ({ ...st, msgs: [...st.msgs, { id: uid(), contactId: c.id, dir: 'out', texto, ts: Date.now() }] })); if (!DEMO) disparar(c.fone, texto, c.nome); setTexto('') }
   const simularResposta = () => c && set(st => receberMensagem(st, c.nome, c.fone, 'Oi! Vi sua mensagem, quero sim.'))
   const simularSite = () => {
     const nomes = ['Luana Monteiro', 'Bruna Cardoso', 'Thaís Ribeiro', 'Paula Sena', 'Joana Matos']
@@ -265,6 +280,7 @@ export function WhatsApp() {
 // ---------- 3. Painel ----------
 export function Painel() {
   const { s, set, toast } = useApp()
+  const disparar = useDisparo()
   const [arrastando, setArrastando] = useState<string | null>(null)
   const [abrir, setAbrir] = useState<{ q: Quote; coluna: Coluna } | null>(null)
 
@@ -328,7 +344,8 @@ export function Painel() {
             if (msg) n = enviar(n, q.contactId, msg, 'painel_' + q.coluna, q.id)
             return n
           })
-          toast(msg ? 'Salvo e mensagem na fila do WhatsApp' : 'Card atualizado'); setAbrir(null)
+          if (msg) { const ct = s.contacts.find(x => x.id === q.contactId)!; disparar(ct.fone, msg, ct.nome) } else toast('Card atualizado')
+          setAbrir(null)
         }} />}
     </div>
   )
@@ -570,7 +587,8 @@ export function Agenda() {
 }
 
 function Manutencoes() {
-  const { s, set, toast, irAgendar } = useApp()
+  const { s, set, irAgendar } = useApp()
+  const disparar = useDisparo()
   const lista = manutencoes(s)
   const grupos: { id: StatusManut; nome: string; cls: string }[] = [
     { id: 'atrasada', nome: 'Atrasadas, sem marcar', cls: 'aviso-agendar' },
@@ -602,7 +620,7 @@ function Manutencoes() {
                   </div>
                   {(m.status === 'atrasada' || m.status === 'faltou' || m.status === 'a_marcar') && (
                     <div className="flex gap-1.5">
-                      <button className="btn-send px-2.5 py-1 text-xs" onClick={() => { set(st => enviar(st, m.contact.id, mensagem(st, 'manutencao_atrasada', m.contact), 'manut')); toast('Mensagem na fila do WhatsApp') }}>Enviar</button>
+                      <button className="btn-send px-2.5 py-1 text-xs" onClick={() => { const tx = mensagem(s, 'manutencao_atrasada', m.contact); set(st => enviar(st, m.contact.id, tx, 'manut')); disparar(m.contact.fone, tx, m.contact.nome) }}>Enviar</button>
                       <button className="btn-ghost px-2.5 py-1 text-xs" onClick={() => irAgendar(m.contact.id, S.man)}>Agendar</button>
                     </div>
                   )}
@@ -656,7 +674,8 @@ function NovaConsulta({ profId, hora, dia, contactId, serviceId, problema, fecha
 
 // ---------- 5. Sumidos ----------
 export function Sumidos() {
-  const { s, set, toast } = useApp()
+  const { s, set } = useApp()
+  const disparar = useDisparo()
   const lista = sumidos(s).filter(x => !s.envios.some(e => e.contactId === x.contact.id && e.dia === hoje()))
   if (!lista.length) return <Vazio titulo="Ninguém sumido agora.">Quem passar do prazo de retorno aparece aqui sozinho.</Vazio>
   return (
@@ -669,7 +688,7 @@ export function Sumidos() {
               <div className="space-y-1"><p className="font-semibold">{x.contact.nome}</p><Aviso tipo="sumida">Há {x.dias} dias sem voltar · {x.service.nome} em {fmtDia(x.proc.data)}</Aviso></div></div>
             <div className="flex gap-2 justify-end">
               <BotaoAgendar contactId={x.contact.id} serviceId={x.service.id} />
-              <button className="btn-send" onClick={() => { set(st => enviar(st, x.contact.id, texto, 'sumida')); toast('Mensagem de volta na fila do WhatsApp') }}>Enviar ➤</button>
+              <button className="btn-send" onClick={() => { set(st => enviar(st, x.contact.id, texto, 'sumida')); disparar(x.contact.fone, texto, x.contact.nome) }}>Enviar ➤</button>
             </div>
           </div>
         )
@@ -865,7 +884,7 @@ function WhatsAppAjustes() {
     <div className="card p-5 space-y-4 max-w-md">
       <h3 className="text-xl">WhatsApp da clínica</h3>
       <ConectarWhatsApp />
-      {st?.estado === 'open' && <Desconectar />}
+      {st?.estado === 'open' && <><TesteEnvio /><Desconectar /></>}
       <p className="text-xs text-muted">Proteção do número: até 40 mensagens por dia, intervalo de 20 a 60 segundos entre envios, só das 8h às 20h e nada de envio em massa.</p>
     </div>
   )

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Provider, useApp, supabase, DEMO, type Tela } from './store'
 import { brl, valorParado, chamarHoje, T } from './data'
 import { useStatusWpp } from './whatsapp'
@@ -23,7 +23,7 @@ function Raiz() {
   const [papel, setPapel] = useState<Papel | null>(() => { try { return sessionStorage.getItem('papel') as Papel } catch { return null } })
   const entrar = (p: Papel | null) => { try { if (p) sessionStorage.setItem('papel', p); else sessionStorage.removeItem('papel') } catch { /* sem storage */ } setPapel(p) }
   if (!papel) return <Login onEntrar={entrar} />
-  return <Shell papel={papel} sair={() => entrar(null)} />
+  return <Shell papel={papel} sair={() => { fetch('/api/login', { method: 'DELETE' }).catch(() => {}); entrar(null) }} />
 }
 
 export function Marca({ grande = false }: { grande?: boolean }) {
@@ -40,18 +40,35 @@ export function Marca({ grande = false }: { grande?: boolean }) {
 }
 
 function Login({ onEntrar }: { onEntrar: (p: Papel) => void }) {
+  const [exige, setExige] = useState<boolean | null>(null)
+  const [senha, setSenha] = useState('')
+  const [erro, setErro] = useState('')
+  const [carregando, setCarregando] = useState(false)
+  useEffect(() => {
+    fetch('/api/login').then(r => r.json()).then(j => setExige(!!j.exigeSenha)).catch(() => setExige(false))
+  }, [])
+  async function entrar(p: Papel) {
+    if (!exige) return onEntrar(p)
+    setCarregando(true); setErro('')
+    try {
+      const r = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ senha }) })
+      if (r.ok) onEntrar(p); else setErro((await r.json()).erro ?? 'Não foi possível entrar')
+    } catch { setErro('Sem conexão. Tente de novo.') }
+    setCarregando(false)
+  }
   return (
     <div className="min-h-dvh flex items-center justify-center p-5 bg-[linear-gradient(160deg,#F6EBD0,#FBF7EE_45%,#fff)]">
-      <div className="card w-full max-w-sm p-7 space-y-6">
+      <form className="card w-full max-w-sm p-7 space-y-6" onSubmit={e => { e.preventDefault(); entrar('dona') }}>
         <Marca grande />
         <div className="space-y-3">
-          <div><label className="label">E-mail</label><input className="input" defaultValue="elizabeth@ortoclin.com.br" /></div>
-          <div><label className="label">Senha</label><input className="input" type="password" defaultValue="demonstracao" /></div>
-          <button className="btn-gold w-full py-3" onClick={() => onEntrar('dona')}>Entrar como Dra. Elizabeth</button>
-          <button className="btn-ghost w-full py-3" onClick={() => onEntrar('recepcao')}>Entrar como recepção</button>
+          <div><label className="label">Senha do painel</label>
+            <input className="input" type="password" autoComplete="current-password" value={senha} onChange={e => setSenha(e.target.value)} placeholder={exige === false ? 'Sem senha nesta instalação' : ''} /></div>
+          {erro && <p className="text-sm text-red-700 font-medium">{erro}</p>}
+          <button type="submit" className="btn-gold w-full py-3" disabled={carregando || exige === null || (!!exige && !senha)}>Entrar como Dra. Elizabeth</button>
+          <button type="button" className="btn-ghost w-full py-3" disabled={carregando || exige === null || (!!exige && !senha)} onClick={() => entrar('recepcao')}>Entrar como recepção</button>
         </div>
         {DEMO && <p className="text-center text-xs text-muted">Demonstração com pacientes fictícios</p>}
-      </div>
+      </form>
     </div>
   )
 }
